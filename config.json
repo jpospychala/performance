@@ -1,0 +1,31 @@
+{
+  "rabbits": {
+    "tasks": [
+      ["node", "./rabbit/consumer.js"],
+      ["node", "./rabbit/producer.js"]
+    ],
+    "daemons": [
+      "rabbitmq-server"
+    ],
+    "options": {
+      "msgsToSend": [500],
+      "delayBetweenMsgs": [20, 10, 5, 1, 0],
+      "msgOpts": [{}, {"persistent": true}],
+      "queue": ["q2"],
+      "queueOpts": [{}],
+      "consumerOpts": [{"noAck": true}, {"noAck": false}],
+      "prefetchCount": [false, 1, 10, 100]
+    }
+  },
+  "test": {
+    "tasks": [
+      ["node", "./test/count.js"]
+    ],
+    "daemons": [
+    ],
+    "options": {
+      "max": [10, 100, 200],
+      "delay": [5, 10, 15]
+    }
+  }
+}

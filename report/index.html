@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html ng-app="app">
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.legend {
+    font-weight: bold;
+}
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/ramda/0.5.0/ramda.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.0/angular.min.js"></script>
+<script>
+
+function Diagram() {
+  var self = this;
+
+  var margin = {top: 20, right: 300, bottom: 30, left: 50},
+      width = 1260 - margin.left - margin.right,
+      height = 500 - margin.top - margin.bottom;
+
+  var parseDate = d3.time.format("%Y%m%d").parse;
+
+  var x = d3.scale.linear()
+      .range([0, width]);
+
+  var y = d3.scale.linear()
+      .range([height, 0]);
+
+  var color = d3.scale.category10();
+
+  var xAxis = d3.svg.axis()
+      .scale(x)
+      .orient("bottom");
+
+  var yAxis = d3.svg.axis()
+      .scale(y)
+      .orient("left");
+
+  var line = d3.svg.line()
+      .interpolate("basis")
+      .x(function(d) { return x(d.x); })
+      .y(function(d) { return y(d.y); });
+
+  var svg = d3.select("body").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  var label = function(d) {
+    var params = self.uniqueParams ? ramda.pick(self.uniqueParams, d.params) : d.params;
+    return (d.params.task+' '+JSON.stringify(params)).replace(/[^ a-zA-Z0-9]/g, '');
+  };
+
+  self.setData = function(data) {
+    self.data = data;
+    self.draw();
+  }
+
+  self.draw = function draw() {
+    var data = self.data;
+    color.domain(data.map(label));
+
+    var series = color.domain().map(function(name) {
+      return {
+        name: name,
+        values: data.filter(function(d) {return label(d) === name;})[0].log
+        .map(function(d, i) {return {x: i, y: d}; })
+      };
+    });
+
+    x.domain([0, d3.max(data.map(ramda.path('log.length')))]);
+
+    y.domain([
+      d3.min(series, function(c) { return d3.min(c.values, ramda.path('y')); }),
+      d3.max(series, function(c) { return d3.max(c.values, ramda.path('y')); })
+    ]);
+
+    svg.selectAll("*").remove();
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+      .append("text")
+        .attr("y", 21)
+        .attr("dy", ".71em")
+        .attr("x", (width+50)/2)
+        .style("text-anchor", "end")
+        .text("Messages (n)");
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+      .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Latency (ms)");
+
+    var serie = svg.selectAll(".serie")
+        .data(series)
+      .enter().append("g")
+        .attr("class", "serie");
+
+    serie.append("path")
+        .attr("class", "line")
+        .attr("d", function(d) { return line(d.values); })
+        .style("stroke", function(d) { return color(d.name); });
+
+    serie.append("text")
+        .attr("class", "legend")
+        .attr("x", width + 10)
+        .attr("y", function(d, i) { return (i * 16) + 5; })
+        .style("fill", function(d) { return color(d.name); })
+        .text(ramda.path('name'));
+  }
+}
+
+var app = angular.module('app', []);
+app.controller('DiagramCtrl', function($scope) {
+  $scope.params = {};
+  var d = new Diagram();
+  d3.json("result.json", function(error, data) {
+    if (error) {
+      console.warn(error);
+    }
+    data = data.filter(function(d) {return d.log.length > 0; });
+    setControls(data);
+    $scope.data = data;
+    d.uniqueParams = Object.keys($scope.params);
+    d.setData(data);
+    $scope.$apply();
+  });
+
+  $scope.toggle = function(param, values) {
+    var idx = values.indexOf(param);
+    if (idx == -1) {
+      values.push(param);
+    } else {
+      values.splice(idx, 1);
+    }
+    setData();
+  }
+
+  function setData() {
+    var newData = $scope.data.filter(function(d) {
+      var filtered = true;
+      Object.keys($scope.params).forEach(function(param) {
+        var v= JSON.stringify(d.params[param]);
+        filtered = filtered && ($scope.params[param].hide.indexOf(v) == -1);
+      });
+      return filtered;
+    });
+    d.setData(newData);
+  }
+
+  function setControls(data) {
+    var params = {};
+    data.forEach(function(d) {
+      Object.keys(d.params).forEach(function(param) {
+        var newVal = JSON.stringify(d.params[param]);
+        if (! params[param]) {
+          params[param] = {values: [newVal], hide: []};
+        } else if (params[param].values.indexOf(newVal) == -1) {
+          params[param].values.push(newVal);
+        }
+      });
+    });
+    Object.keys(params).forEach(function(param) {
+      if (params[param].values.length <= 1) {
+        delete params[param];
+      }
+    });
+    $scope.params = params;
+  };
+});
+
+</script>
+<div ng-controller="DiagramCtrl">
+  <table>
+    <tr ng-repeat="(param, values) in params">
+      <td>{{param}}</td>
+      <td ng-repeat="value in values.values">
+        <input type="checkbox" ng-checked="values.hide.indexOf(value) == -1" ng-click="toggle(value, values.hide)"> {{value}}
+      </td>
+    </tr>
+  </table>
+</div>
+</body>
+</html>

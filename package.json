@@ -1,0 +1,7 @@
+{
+  "name": "amqp-producer-consumer",
+  "dependencies": {
+    "amqplib": "^0.2.1",
+    "when": "^3.4.6"
+  }
+}
