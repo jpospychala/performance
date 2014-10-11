@@ -1,9 +1,9 @@
 {
   "rabbits": {
-    "tasks": [
-      ["node", "./rabbit/consumer.js"],
-      ["node", "./rabbit/producer.js"]
-    ],
+    "tasks": {
+      "consumer": ["node", "./rabbit/consumer.js"],
+      "producer": ["node", "./rabbit/producer.js"]
+    },
     "daemons": [
       "rabbitmq-server"
     ],
@@ -20,9 +20,11 @@
     }
   },
   "test": {
-    "tasks": [
-      ["node", "./test/count.js"]
-    ],
+    "before": ["node", "./test/before.js"],
+    "tasks": {
+      "count": ["node", "./test/count.js"]
+    },
+    "after": ["node", "./test/after.js"],
     "daemons": [
     ],
     "options": {

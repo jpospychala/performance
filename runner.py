@@ -50,7 +50,9 @@ def process(configFile, configName, runreport, verbose):
       config['options'].update({'config_name': name})
       variantsList = variants(config['options'])
       for variant in variantsList:
-        allVariants.append({"tasks": config["tasks"], "config": variant})
+        c = config.copy()
+        c.update({"config": variant})
+        allVariants.append(c)
 
   i = 0;
   n = len(allVariants)
@@ -65,7 +67,7 @@ def process(configFile, configName, runreport, verbose):
 
     print '{0}/{1} executing {2}'.format(i, n, json.dumps(variant["config"]))
 
-    logpaths = run(variant["tasks"], variant["config"], id, verbose)
+    logpaths = run(variant, id, verbose)
     for task, path in logpaths.items():
       log = readLog(path)
       params = variant["config"].copy()
@@ -84,21 +86,26 @@ def readLog(path):
   return values
 
 
-def run(tasks, config, id, verbose):
+def run(config, id, verbose):
+  logdir = 'results/'+id+'/'
   processes = []
   logs = {}
-  for t in tasks:
-    logdir = 'results/'+id+'/'
-    logpath = logdir + re.sub(r'[^a-zA-Z0-9]', '', ' '.join(t)) + '.log'
-    logs[' '.join(t)] = logpath
-    if not os.path.exists(logdir):
-      os.makedirs(logdir)
+  if not os.path.exists(logdir):
+    os.makedirs(logdir)
+  print config
+  if config["before"]:
+    subprocess.call(config["before"])
+  for taskName, t in config["tasks"].items():
+    logpath = logdir + taskName + '.log'
+    logs[taskName] = logpath
     if verbose:
       print logpath
-    p = subprocess.Popen(t + [json.dumps(config)], stdout=open(logpath,'w+'))
+    p = subprocess.Popen(t + [json.dumps(config["config"])], stdout=open(logpath,'w+'))
     processes.append(p)
   for p in processes:
     p.wait()
+  if config["after"]:
+    subprocess.call(config["after"])
   return logs
 
 
