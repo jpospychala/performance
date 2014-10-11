@@ -65,7 +65,7 @@ def process(configFile, configName, runreport, verbose):
 
     print '{0}/{1} executing {2}'.format(i, n, json.dumps(variant["config"]))
 
-    logpaths = run(variant["tasks"], variant["config"], verbose)
+    logpaths = run(variant["tasks"], variant["config"], id, verbose)
     for task, path in logpaths.items():
       log = readLog(path)
       params = variant["config"].copy()
@@ -84,11 +84,11 @@ def readLog(path):
   return values
 
 
-def run(tasks, config, verbose):
+def run(tasks, config, id, verbose):
   processes = []
   logs = {}
   for t in tasks:
-    logdir = 'results/' + re.sub(r'[^a-zA-Z0-9]', '', json.dumps(config)) + '/'
+    logdir = 'results/'+id+'/'
     logpath = logdir + re.sub(r'[^a-zA-Z0-9]', '', ' '.join(t)) + '.log'
     logs[' '.join(t)] = logpath
     if not os.path.exists(logdir):
