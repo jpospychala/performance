@@ -8,9 +8,10 @@ import md5
 
 def main(argv):
   appendToReport = False
+  verbose = False
 
   try:
-    opts, args = getopt.getopt(argv, "ha", ["help"])
+    opts, args = getopt.getopt(argv, "hav", ["help", "append", "verbose"])
   except getopt.GetoptError:
     usage()
     sys.exit(2)
@@ -20,6 +21,8 @@ def main(argv):
       sys.exit()
     if opt in ("-a", "--append"):
       appendToReport = True
+    if opt in ("-v", "--verbose"):
+      verbose = True
 
   if not args:
     usage()
@@ -36,10 +39,10 @@ def main(argv):
     with open('report/result.json', 'r') as f:
       report = json.load(f)
 
-  process(configFile, configName, report)
+  process(configFile, configName, report, verbose)
 
 
-def process(configFile, configName, runreport):
+def process(configFile, configName, runreport, verbose):
   allVariants = []
   for name, config in configFile.items():
     if not configName or name == configName:
@@ -62,7 +65,7 @@ def process(configFile, configName, runreport):
 
     print '{0}/{1} executing {2}'.format(i, n, json.dumps(variant["config"]))
 
-    logpaths = run(variant["tasks"], variant["config"])
+    logpaths = run(variant["tasks"], variant["config"], verbose)
     for task, path in logpaths.items():
       log = readLog(path)
       params = variant["config"].copy()
@@ -81,7 +84,7 @@ def readLog(path):
   return values
 
 
-def run(tasks, config):
+def run(tasks, config, verbose):
   processes = []
   logs = {}
   for t in tasks:
@@ -90,6 +93,8 @@ def run(tasks, config):
     logs[' '.join(t)] = logpath
     if not os.path.exists(logdir):
       os.makedirs(logdir)
+    if verbose:
+      print logpath
     p = subprocess.Popen(t + [json.dumps(config)], stdout=open(logpath,'w+'))
     processes.append(p)
   for p in processes:
