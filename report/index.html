@@ -73,11 +73,13 @@ function Diagram() {
 
   var label = function(d) {
     var params = self.uniqueParams ? ramda.pick(self.uniqueParams, d.params) : d.params;
-    return (d.params.task+' '+JSON.stringify(params)).replace(/[^ a-zA-Z0-9]/g, '');
+    return (d.params.task+' '+JSON.stringify(params)).replace(/[^ a-zA-Z0-9:,]/g, '');
   };
 
-  self.setData = function(data) {
+  self.setData = function(data, xName, yName) {
     self.data = data;
+    self.xName = xName;
+    self.yName = yName;
     self.draw();
   }
 
@@ -86,14 +88,22 @@ function Diagram() {
     color.domain(data.map(label));
 
     var series = color.domain().map(function(name) {
+      var d = data.filter(function(d) {return label(d) === name;})[0];
+      var xAxis = d.headers.indexOf(self.xName);
+      var yAxis = d.headers.indexOf(self.yName);
+      if (xAxis == -1) xAxis = false;
+      if (yAxis == -1) yAxis = false;
       return {
         name: name,
-        values: data.filter(function(d) {return label(d) === name;})[0].log
-        .map(function(d, i) {return {x: i, y: d}; })
+        values: d.values
+        .map(function(d, i) {return {x: d[xAxis] || i, y: d[yAxis] || i}; })
       };
     });
 
-    x.domain([0, d3.max(data.map(ramda.path('log.length')))]);
+    x.domain([
+      d3.min(series, function(c) { return d3.min(c.values, ramda.path('x')); }),
+      d3.max(series, function(c) { return d3.max(c.values, ramda.path('x')); })
+    ]);
 
     y.domain([
       d3.min(series, function(c) { return d3.min(c.values, ramda.path('y')); }),
@@ -110,7 +120,7 @@ function Diagram() {
         .attr("dy", ".71em")
         .attr("x", (width+50)/2)
         .style("text-anchor", "end")
-        .text("Messages (n)");
+        .text(self.xName);
 
     svg.append("g")
         .attr("class", "y axis")
@@ -120,7 +130,7 @@ function Diagram() {
         .attr("y", 6)
         .attr("dy", ".71em")
         .style("text-anchor", "end")
-        .text("Latency (ms)");
+        .text(self.yName);
 
     var serie = svg.selectAll(".serie")
         .data(series)
@@ -153,7 +163,7 @@ app.controller('DiagramCtrl', function($scope) {
     setControls(data);
     $scope.data = data;
     d.uniqueParams = Object.keys($scope.params);
-    d.setData(data);
+    d.setData(data, $scope.x, $scope.y);
     $scope.$apply();
   });
 
@@ -165,9 +175,12 @@ app.controller('DiagramCtrl', function($scope) {
       values.splice(idx, 1);
     }
     setData();
-  }
+  };
 
   function setData() {
+    if (!$scope.data) {
+      return;
+    }
     var newData = $scope.data.filter(function(d) {
       var filtered = true;
       Object.keys($scope.params).forEach(function(param) {
@@ -176,12 +189,21 @@ app.controller('DiagramCtrl', function($scope) {
       });
       return filtered;
     });
-    d.setData(newData);
+    d.setData(newData, $scope.x, $scope.y);
   }
+
+  $scope.$watch('x', setData);
+  $scope.$watch('y', setData);
 
   function setControls(data) {
     var params = {};
+    var headers = ['n'];
     data.forEach(function(d) {
+      d.headers.forEach(function(header) {
+        if (headers.indexOf(header) == -1) {
+          headers.push(header);
+        }
+      });
       Object.keys(d.params).forEach(function(param) {
         var newVal = JSON.stringify(d.params[param]);
         if (! params[param]) {
@@ -197,12 +219,27 @@ app.controller('DiagramCtrl', function($scope) {
       }
     });
     $scope.params = params;
+    $scope.headers = headers;
+    $scope.x = headers[0];
+    $scope.y = headers[1];
   };
 });
 
 </script>
 <div ng-controller="DiagramCtrl">
   <table>
+    <tr>
+      <td>X<td/>
+      <td ng-repeat="header in headers">
+        <input type="radio" ng-model="$parent.x" ng-value="header"> {{header}}
+      </td>
+    </tr>
+    <tr>
+      <td>Y<td/>
+      <td ng-repeat="header in headers">
+        <input type="radio" ng-model="$parent.y" ng-value="header"> {{header}}
+      </td>
+    </tr>
     <tr ng-repeat="(param, values) in params">
       <td>{{param}}</td>
       <td ng-repeat="value in values.values">
