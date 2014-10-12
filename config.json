@@ -22,14 +22,14 @@
   "test": {
     "before": ["node", "./test/before.js"],
     "tasks": {
-      "count": ["node", "./test/count.js"]
+      "sleep": ["node", "./test/count.js"]
     },
     "after": ["node", "./test/after.js"],
     "daemons": [
     ],
     "options": {
-      "max": [10, 100, 200],
-      "delay": [5, 10, 15]
+      "n": [2, 200],
+      "time": [0, 5, 10, 50, 100]
     }
   }
 }
