@@ -9,10 +9,11 @@
     ],
     "options": {
       "msgsToSend": [500],
-      "delayBetweenMsgs": [20, 10, 5, 1, 0],
+      "produceTime": [20, 10, 5, 1, 0],
+      "consumeTime": [0],
       "msgOpts": [{}, {"persistent": true}],
       "queue": ["q2"],
-      "queueOpts": [{}],
+      "queueOpts": [{"autoDelete": true, "durable": false}],
       "consumerOpts": [{"noAck": true}, {"noAck": false}],
       "prefetchCount": [false, 1, 10, 100],
       "n": [1, 2, 3, 4, 5],
