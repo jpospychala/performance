@@ -69,35 +69,40 @@ def process(configFile, configName, runreport, verbose):
 
     logpaths = run(variant, id, verbose)
     for task, path in logpaths.items():
-      log = readLog(path)
+      headers, values = readLog(path)
       params = variant["config"].copy()
       params.update({"task": task})
-      runreport.append({"id": id, "params": params, "log": log})
+      runreport.append({"id": id, "params": params, "headers": headers, "values": values})
 
     with open('report/result.json', 'w') as f:
       json.dump(runreport, f)
 
 
 def readLog(path):
+  headers = []
   values = []
   with open(path, 'r') as f:
+    first = True
     for line in f:
-      values.append(int(line))
-  return values
+      if first:
+        headers = line.strip().split(',')
+        first = False
+      else:
+        values.append([int(x) for x in line.split(',')])
+  return headers, values
 
 
 def run(config, id, verbose):
   logdir = 'results/'+id+'/'
   processes = []
-  logs = {}
+  logPaths = {}
   if not os.path.exists(logdir):
     os.makedirs(logdir)
-  print config
   if config["before"]:
     subprocess.call(config["before"])
   for taskName, t in config["tasks"].items():
     logpath = logdir + taskName + '.log'
-    logs[taskName] = logpath
+    logPaths[taskName] = logpath
     if verbose:
       print logpath
     p = subprocess.Popen(t + [json.dumps(config["config"])], stdout=open(logpath,'w+'))
@@ -106,7 +111,7 @@ def run(config, id, verbose):
     p.wait()
   if config["after"]:
     subprocess.call(config["after"])
-  return logs
+  return logPaths
 
 
 def variants(dict):

@@ -149,7 +149,7 @@ app.controller('DiagramCtrl', function($scope) {
     if (error) {
       console.warn(error);
     }
-    data = data.filter(function(d) {return d.log.length > 0; });
+    data = data.filter(function(d) {return d.values.length > 0; });
     setControls(data);
     $scope.data = data;
     d.uniqueParams = Object.keys($scope.params);
