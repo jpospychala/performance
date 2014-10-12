@@ -4,26 +4,30 @@ var config = JSON.parse(process.argv[2]);
 
 var msgsToSend = config.msgsToSend;
 
-amqp.connect('amqp://localhost').then(function(conn) {
-  return when(conn.createChannel().then(function(ch) {
-    var q = config.queue;
+setTimeout(start, 1000);
 
-    var ok = ch.assertQueue(q, config.queueOpts);
+function start() {
+    amqp.connect('amqp://localhost').then(function(conn) {
+      return when(conn.createChannel().then(function(ch) {
+        var q = config.queue;
 
-    return ok.then(function(_qok) {
-      return when.promise(function(resolve, reject, notify) {
-        var intervalObj = setInterval(function() {
-            if (msgsToSend <= 0) {
-              clearInterval(intervalObj);
-              ch.close().then(resolve);
-              return;
-            }
+        var ok = ch.checkQueue(q);
 
-            var msg = '' + (new Date().getTime());
-            msgsToSend--;
-            ch.sendToQueue(q, new Buffer(msg), config.msgOpts)
-        }, config.delayBetweenMsgs);
-      });
-    });
-  })).ensure(function() { conn.close(); });;
-}).then(null, console.warn);
+        return ok.then(function(_qok) {
+          return when.promise(function(resolve, reject, notify) {
+            var intervalObj = setInterval(function() {
+                if (msgsToSend <= 0) {
+                  clearInterval(intervalObj);
+                  ch.close().then(resolve);
+                  return;
+                }
+
+                var msg = '' + (new Date().getTime());
+                msgsToSend--;
+                ch.sendToQueue(q, new Buffer(msg), config.msgOpts)
+            }, config.produceTime);
+          });
+        });
+      })).ensure(function() { conn.close(); });;
+    }).then(null, console.warn);
+};
