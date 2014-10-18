@@ -99,7 +99,7 @@ def run(config, id, verbose):
   logPaths = {}
   if not os.path.exists(logdir):
     os.makedirs(logdir)
-  if config["before"]:
+  if "before" in config:
     subprocess.call(config["before"])
   for taskName, t in config["tasks"].items():
     logpath = logdir + taskName + '.log'
@@ -110,7 +110,7 @@ def run(config, id, verbose):
     processes.append(p)
   for p in processes:
     p.wait()
-  if config["after"]:
+  if "after" in config:
     subprocess.call(config["after"])
   return logPaths
 
