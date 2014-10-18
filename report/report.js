@@ -58,12 +58,10 @@ function Diagram() {
       var d = data.filter(function(d) {return label(d) === name;})[0];
       var xAxis = d.headers.indexOf(self.xName);
       var yAxis = d.headers.indexOf(self.yName);
-      if (xAxis == -1) xAxis = false;
-      if (yAxis == -1) yAxis = false;
       return {
         name: name,
         values: d.values
-        .map(function(d, i) {return {x: (xAxis ? d[xAxis] : i), y: (yAxis? d[yAxis] : i)}; })
+        .map(function(d, i) {return {x: (xAxis != -1 ? d[xAxis] : i), y: (yAxis != -1 ? d[yAxis] : i)}; })
       };
     });
 
