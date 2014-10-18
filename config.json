@@ -10,8 +10,8 @@
     "options": {
       "n": [1, 2, 3, 4, 5],
       "msgsToSend": [500],
-      "produceTime": [20, 10, 5, 1, 0],
-      "consumeTime": [0],
+      "msgSendDelay": [50, 0],
+      "msgAckDelay": [0, 50],
       "msgOpts": [{}, {"persistent": true}],
       "queue": ["q2"],
       "queueOpts": [{"autoDelete": true, "durable": false}],

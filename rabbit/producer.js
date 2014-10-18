@@ -25,7 +25,7 @@ function start() {
                 var msg = '' + (new Date().getTime());
                 msgsToSend--;
                 ch.sendToQueue(q, new Buffer(msg), config.msgOpts)
-            }, config.produceTime);
+            }, config.msgSendDelay);
           });
         });
       })).ensure(function() { conn.close(); });;

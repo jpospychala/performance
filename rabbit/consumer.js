@@ -21,13 +21,16 @@ amqp.connect('amqp://localhost').then(function(conn) {
         var now = new Date().getTime();
         var then = 1*msg.content.toString();
         console.log((now-start)+','+(now-then));
-        msgsToSend--;
-        if (! config.consumerOpts.noAck) {
-          ch.ack(msg);
-        }
-        if (msgsToSend == 0) {
-          setImmediate(function() {conn.close();});
-        }
+
+        setTimeout(function() {
+          if (! config.consumerOpts.noAck) {
+            ch.ack(msg);
+          }
+          msgsToSend--;
+          if (msgsToSend == 0) {
+            setImmediate(function() {conn.close();});
+          }
+        }, config.msgAckDelay);
       }, config.consumerOpts);
     });
   });
