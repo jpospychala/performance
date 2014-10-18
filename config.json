@@ -8,6 +8,7 @@
       "rabbitmq-server"
     ],
     "options": {
+      "n": [1, 2, 3, 4, 5],
       "msgsToSend": [500],
       "produceTime": [20, 10, 5, 1, 0],
       "consumeTime": [0],
@@ -16,7 +17,6 @@
       "queueOpts": [{"autoDelete": true, "durable": false}],
       "consumerOpts": [{"noAck": true}, {"noAck": false}],
       "prefetchCount": [false, 1, 10, 100],
-      "n": [1, 2, 3, 4, 5],
       "msgSize": [13]
     }
   },
