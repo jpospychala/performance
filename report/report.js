@@ -156,7 +156,10 @@ app.controller('DiagramCtrl', function($scope) {
       });
       return filtered;
     });
-    d.setData(newData, $scope.x, $scope.y, Object.keys($scope.params), $scope.interpolate);
+    var nonDistinctParams = Object.keys($scope.params).filter(function(param) {
+      return $scope.params[param].values.length - $scope.params[param].hide.length > 1;
+    });
+    d.setData(newData, $scope.x, $scope.y, nonDistinctParams, $scope.interpolate);
   }
 
   $scope.$watch('x', setData);
