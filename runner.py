@@ -74,8 +74,9 @@ def process(configFile, configName, runreport, verbose):
       params.update({"task": task})
       runreport.append({"id": id, "params": params, "headers": headers, "values": values})
 
-    with open('report/result.json', 'w') as f:
-      json.dump(runreport, f)
+      # update report file continuously
+      with open('report/result.json', 'w') as f:
+        json.dump(runreport, f)
 
 
 def readLog(path):
