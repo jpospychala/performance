@@ -1,6 +1,7 @@
 
 function Diagram() {
   var self = this;
+  self.interpolate = 'linear';
 
   var margin = {top: 20, right: 300, bottom: 30, left: 50},
       width = 1260 - margin.left - margin.right,
@@ -24,11 +25,6 @@ function Diagram() {
       .scale(y)
       .orient("left");
 
-  var line = d3.svg.line()
-      .interpolate("linear")
-      .x(function(d) { return x(d.x); })
-      .y(function(d) { return y(d.y); });
-
   var svg = d3.select("body").append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
@@ -40,14 +36,21 @@ function Diagram() {
     return (d.params.task+' '+JSON.stringify(params)).replace(/[^ a-zA-Z0-9:,]/g, '');
   };
 
-  self.setData = function(data, xName, yName) {
+  self.setData = function(data, xName, yName, uniqueParams, interpolate) {
     self.data = data;
     self.xName = xName;
     self.yName = yName;
+    self.uniqueParams = uniqueParams;
+    self.interpolate = interpolate;
     self.draw();
   }
 
   self.draw = function draw() {
+    var line = d3.svg.line()
+        .interpolate(self.interpolate)
+        .x(function(d) { return x(d.x); })
+        .y(function(d) { return y(d.y); });
+
     var data = self.data;
     color.domain(data.map(label));
 
@@ -118,6 +121,9 @@ function Diagram() {
 var app = angular.module('app', []);
 app.controller('DiagramCtrl', function($scope) {
   $scope.params = {};
+  $scope.interpolates = ['linear', 'step', 'basis', 'bundle', 'cardinal'];
+  $scope.interpolate = 'linear';
+
   var d = new Diagram();
   d3.json("result.json", function(error, data) {
     if (error) {
@@ -126,8 +132,7 @@ app.controller('DiagramCtrl', function($scope) {
     data = data.filter(function(d) {return d.values.length > 0; });
     setControls(data);
     $scope.data = data;
-    d.uniqueParams = Object.keys($scope.params);
-    d.setData(data, $scope.x, $scope.y);
+    setData();
     $scope.$apply();
   });
 
@@ -153,11 +158,12 @@ app.controller('DiagramCtrl', function($scope) {
       });
       return filtered;
     });
-    d.setData(newData, $scope.x, $scope.y);
+    d.setData(newData, $scope.x, $scope.y, Object.keys($scope.params), $scope.interpolate);
   }
 
   $scope.$watch('x', setData);
   $scope.$watch('y', setData);
+  $scope.$watch('interpolate', setData);
 
   function setControls(data) {
     var params = {};

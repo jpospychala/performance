@@ -49,6 +49,11 @@ body {
         <input type="radio" ng-model="$parent.y" ng-value="header"> {{header}}
       </td>
     </tr>
+    <tr>
+      <td>Line style</td>
+      <td><select ng-model="interpolate" ng-options="l for l in interpolates"></select>
+      </td>
+    </tr>
     <tr ng-repeat="(param, values) in params">
       <td>{{param}}</td>
       <td ng-repeat="value in values.values">
