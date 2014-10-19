@@ -56,12 +56,22 @@ function Diagram() {
 
     var series = color.domain().map(function(name) {
       var d = data.filter(function(d) {return label(d) === name;})[0];
-      var xAxis = d.headers.indexOf(self.xName);
-      var yAxis = d.headers.indexOf(self.yName);
+      function valueFunc(name) {
+        if (name === 'n') {
+          return function(d, i) { return i; };
+        }
+        var axis = d.headers.indexOf(name);
+        if (axis == -1) {
+          return function(d, i) { return; };
+        }
+        return function(d, i) { return d[axis]; };
+      }
+      var xAxis = valueFunc(self.xName);
+      var yAxis = valueFunc(self.yName);
       return {
         name: name,
         values: d.values
-        .map(function(d, i) {return {x: (xAxis != -1 ? d[xAxis] : i), y: (yAxis != -1 ? d[yAxis] : i)}; })
+        .map(function(d, i) {return {x: xAxis(d, i), y: yAxis(d, i)}; })
       };
     });
 
