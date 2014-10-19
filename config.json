@@ -9,14 +9,14 @@
     ],
     "options": {
       "n": [1, 2, 3, 4, 5],
-      "msgsToSend": [500],
+      "msgsToSend": [1000],
       "msgSendDelay": [50, 0],
       "msgAckDelay": [0, 50],
       "msgOpts": [{}, {"persistent": true}],
       "queue": ["q2"],
       "queueOpts": [{"autoDelete": true, "durable": false}],
       "consumerOpts": [{"noAck": true}, {"noAck": false}],
-      "prefetchCount": [false, 1, 10, 100],
+      "prefetchCount": [1, 10, false],
       "msgSize": [13]
     }
   },
