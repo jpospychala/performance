@@ -33,7 +33,7 @@ function Diagram() {
 
   var label = function(d) {
     var params = self.uniqueParams ? ramda.pick(self.uniqueParams, d.params) : d.params;
-    return (d.params.task+' '+JSON.stringify(params)).replace(/[^ a-zA-Z0-9:,]/g, '');
+    return (JSON.stringify(params)).replace(/[^ a-zA-Z0-9:,]/g, '');
   };
 
   self.setData = function(data, xName, yName, uniqueParams, interpolate) {
