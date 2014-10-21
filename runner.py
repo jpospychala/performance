@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import os
 import sys
 import getopt
@@ -9,9 +11,12 @@ import md5
 def main(argv):
   appendToReport = False
   verbose = False
+  doRun = True
+  configFileName = 'config.json'
+  instance = None
 
   try:
-    opts, args = getopt.getopt(argv, "hav", ["help", "append", "verbose"])
+    opts, args = getopt.getopt(argv, "havdc:i:", ["help", "append", "verbose", "dryrun", "config", "instance"])
   except getopt.GetoptError:
     usage()
     sys.exit(2)
@@ -23,12 +28,13 @@ def main(argv):
       appendToReport = True
     if opt in ("-v", "--verbose"):
       verbose = True
+    if opt in ("-d", "--dryrun"):
+      doRun = False
+    if opt in ("-c", "--config"):
+      configFileName = arg
+    if opt in ("-i", "--instance"):
+      instance = arg
 
-  if not args:
-    usage()
-    sys.exit(2)
-
-  configFileName = args.pop(0)
   configName = args and args.pop(0)
 
   with open(configFileName, 'r') as f:
@@ -39,10 +45,18 @@ def main(argv):
     with open('report/result.json', 'r') as f:
       report = json.load(f)
 
-  process(configFile, configName, report, verbose)
+  process(configFile, configName, report, verbose, doRun, instance)
+
+def usage():
+  print "runner.py [-hadv] [-c config_file] [config]"
+  print "-a --append     append results rather than overwrite"
+  print "-c config_file  configuration file, default: config.json"
+  print "-d --dryrun     don't actually run anything"
+  print "-h              print this information"
+  print "-v --verbose    verbose"
 
 
-def process(configFile, configName, runreport, verbose):
+def process(configFile, configName, runreport, verbose, doRun, instance):
   allVariants = []
   for name, config in configFile.items():
     if not configName or name == configName:
@@ -61,11 +75,19 @@ def process(configFile, configName, runreport, verbose):
     idmd5 = md5.new()
     idmd5.update(json.dumps(variant["config"]))
     id = idmd5.hexdigest()
-    if [r["id"] for r in runreport if r["id"] == id]:
-        print '{0}/{1} skipping {2}'.format(i, n, json.dumps(variant["config"]))
+
+    if instance != None and instance != id:
         continue
 
-    print '{0}/{1} executing {2}'.format(i, n, json.dumps(variant["config"]))
+    wasRun = [r["id"] for r in runreport if r["id"] == id]
+    if wasRun and id != instance:
+        print '{0}/{1} {2} skipping {3} {2}'.format(i, n, id, json.dumps(variant["config"]))
+        continue
+
+    print '{0}/{1} executing {3} {2}'.format(i, n, id, json.dumps(variant["config"]))
+
+    if not doRun:
+      continue
 
     logpaths = run(variant, id, verbose)
     for task, path in logpaths.items():
@@ -131,13 +153,6 @@ def variants(dict):
       results.append(subv)
   dict[field] = values
   return results
-
-
-def usage():
-  print "runner.py [-ha] config_file [config]"
-  print "-h           print this information"
-  print "-a --append  append results rather than overwrite"
-
 
 if __name__ == "__main__":
   main(sys.argv[1:])
