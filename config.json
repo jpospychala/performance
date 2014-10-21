@@ -20,6 +20,27 @@
       "msgSize": [13]
     }
   },
+"rabbits_latency": {
+  "tasks": {
+    "consumer": ["node", "./rabbit/consumer.js"],
+    "producer": ["node", "./rabbit/producer.js"]
+  },
+  "daemons": [
+    "rabbitmq-server"
+  ],
+  "options": {
+    "n": [1, 2, 3, 4, 5],
+    "msgsToSend": [500],
+    "msgSendDelay": [50],
+    "msgAckDelay": [0],
+    "msgOpts": [{}],
+    "queue": ["q2"],
+    "queueOpts": [{"autoDelete": true, "durable": false}],
+    "consumerOpts": [{"noAck": true}],
+    "prefetchCount": [false],
+    "msgSize": [13]
+  }
+},
   "test": {
     "before": ["node", "./test/before.js"],
     "tasks": {
