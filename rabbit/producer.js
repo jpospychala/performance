@@ -6,7 +6,7 @@ var msgsToSend = config.msgsToSend;
 
 setTimeout(start, 1000);
 
-console.log('time (ms)');
+console.log('ts (ms),time (ms)');
 function start() {
     amqp.connect('amqp://localhost').then(function(conn) {
       return when(conn.createChannel().then(function(ch) {
@@ -28,7 +28,7 @@ function start() {
                 var msg = '' + (now);
                 msgsToSend--;
                 ch.sendToQueue(q, new Buffer(msg), config.msgOpts)
-                console.log(now-start);
+                console.log(now+','+(now-start));
             }, config.msgSendDelay);
           });
         });
