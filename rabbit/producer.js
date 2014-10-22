@@ -27,7 +27,7 @@ function start() {
                 var now = Date.now();
                 var msg = '' + (now);
                 msgsToSend--;
-                ch.sendToQueue(q, new Buffer(msg), config.msgOpts)
+                ch.sendToQueue(q, new Buffer(msg), {deliveryMode: config.deliveryMode})
                 console.log(now+','+(now-start));
             }, config.msgSendDelay);
           });

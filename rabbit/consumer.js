@@ -7,7 +7,7 @@ amqp.connect('amqp://localhost').then(function(conn) {
   process.once('SIGINT', function() { conn.close(); });
   return conn.createChannel().then(function(ch) {
     console.log('ts (ms),time (ms),latency (ms),consume (ms)');
-    var ok = ch.assertQueue(config.queue, config.queueOpts)
+    var ok = ch.assertQueue(config.queue, {autoDelete: true, durable: config.queueDurable})
     .then(function() {
       return ch.purgeQueue(config.queue);
     })
@@ -35,7 +35,7 @@ amqp.connect('amqp://localhost').then(function(conn) {
         }
 
         function ack() {
-          if (! config.consumerOpts.noAck) {
+          if (! config.autoAck) {
             ch.ack(msg);
           }
           msgsToSend--;
@@ -43,7 +43,7 @@ amqp.connect('amqp://localhost').then(function(conn) {
             setImmediate(function() {conn.close();});
           }
         }
-      }, config.consumerOpts);
+      }, {noAck: config.autoAck});
     });
   });
 }).then(null, console.warn);

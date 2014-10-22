@@ -1,8 +1,8 @@
 {
   "rabbits": {
     "tasks": {
-      "consumer": ["node", "./rabbit/consumer.js"],
-      "producer": ["node", "./rabbit/producer.js"]
+      "consumer.js": ["node", "./rabbit/consumer.js"],
+      "producer.js": ["node", "./rabbit/producer.js"]
     },
     "daemons": [
       "rabbitmq-server"
@@ -22,8 +22,8 @@
   },
 "rabbits_latency": {
   "tasks": {
-    "consumer": ["node", "./rabbit/consumer.js"],
-    "producer": ["node", "./rabbit/producer.js"]
+    "consumer.js": ["node", "./rabbit/consumer.js"],
+    "producer.js": ["node", "./rabbit/producer.js"]
   },
   "daemons": [
     "rabbitmq-server"
@@ -33,24 +33,24 @@
     "msgsToSend": [500],
     "msgSendDelay": [50],
     "msgAckDelay": [0],
-    "msgOpts": [{}],
+    "deliveryMode": [1],
     "queue": ["q2"],
-    "queueOpts": [{"autoDelete": true, "durable": false}],
-    "consumerOpts": [{"noAck": true}],
-    "prefetchCount": [false],
+    "queueDurable": [false],
+    "autoAck": [true],
+    "prefetchCount": [0],
     "msgSize": [13]
   }
 },
 "rabbits_latency_java": {
-  "before": ["mvn", "-f", "rabbit/java/pom.xml", "clean", "install"],
+  "build": ["mvn", "-f", "rabbit/java/pom.xml", "clean", "install"],
   "tasks": {
-    "producer": ["java", "-cp", "rabbit/java/target/deps/jackson-core-2.4.3.jar:rabbit/java/target/deps/jackson-annotations-2.4.0.jar:rabbit/java/target/deps/jackson-databind-2.4.3.jar:rabbit/java/target/deps/amqp-client-3.3.5.jar:rabbit/java/target/rabbits-0.0.1-SNAPSHOT.jar", "Producer"],
-    "consumer": ["java", "-cp", "rabbit/java/target/deps/jackson-core-2.4.3.jar:rabbit/java/target/deps/jackson-annotations-2.4.0.jar:rabbit/java/target/deps/jackson-databind-2.4.3.jar:rabbit/java/target/deps/amqp-client-3.3.5.jar:rabbit/java/target/rabbits-0.0.1-SNAPSHOT.jar", "Consumer"]
+    "producer.j": ["java", "-cp", "rabbit/java/target/deps/jackson-core-2.4.3.jar:rabbit/java/target/deps/jackson-annotations-2.4.0.jar:rabbit/java/target/deps/jackson-databind-2.4.3.jar:rabbit/java/target/deps/amqp-client-3.3.5.jar:rabbit/java/target/rabbits-0.0.1-SNAPSHOT.jar", "Producer"],
+    "consumer.j": ["java", "-cp", "rabbit/java/target/deps/jackson-core-2.4.3.jar:rabbit/java/target/deps/jackson-annotations-2.4.0.jar:rabbit/java/target/deps/jackson-databind-2.4.3.jar:rabbit/java/target/deps/amqp-client-3.3.5.jar:rabbit/java/target/rabbits-0.0.1-SNAPSHOT.jar", "Consumer"]
   },
   "daemons": [
   ],
   "options": {
-    "n": [1],
+    "n": [1, 2],
     "msgsToSend": [500],
     "msgSendDelay": [50],
     "msgAckDelay": [0],
