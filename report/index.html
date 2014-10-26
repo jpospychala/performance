@@ -42,6 +42,7 @@ body {
       <td ng-repeat="header in headers">
         <input type="radio" ng-model="$parent.x" ng-value="header"> {{header}}
       </td>
+      <td><input type="text" ng-model="xFrom">-<input type="text" ng-model="xLen"> ({{xMin}}-{{xMax}})</td>
     </tr>
     <tr>
       <td>Y<td/>

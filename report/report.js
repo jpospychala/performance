@@ -7,8 +7,6 @@ function Diagram() {
       width = 1260 - margin.left - margin.right,
       height = 500 - margin.top - margin.bottom;
 
-  var parseDate = d3.time.format("%Y%m%d").parse;
-
   var x = d3.scale.linear()
       .range([0, width]);
 
@@ -31,17 +29,13 @@ function Diagram() {
     .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  var label = function(d) {
-    var params = self.uniqueParams ? ramda.pick(self.uniqueParams, d.params) : d.params;
-    return (JSON.stringify(params)).replace(/[^ a-zA-Z0-9:,]/g, '');
-  };
-
-  self.setData = function(data, xName, yName, uniqueParams, interpolate) {
+  self.setData = function(data, xName, yName, interpolate, range) {
     self.data = data;
     self.xName = xName;
     self.yName = yName;
-    self.uniqueParams = uniqueParams;
+    self.range = range;
     self.interpolate = interpolate;
+    self.range = range;
     self.draw();
   }
 
@@ -52,38 +46,17 @@ function Diagram() {
         .y(function(d) { return y(d.y); });
 
     var data = self.data;
-    color.domain(data.map(label));
+    color.domain(data.map(function(d) { return d.name; }));
 
     var series = color.domain().map(function(name) {
-      var d = data.filter(function(d) {return label(d) === name;})[0];
-      function valueFunc(name) {
-        if (name === 'n') {
-          return function(d, i) { return i; };
-        }
-        var axis = d.headers.indexOf(name);
-        if (axis == -1) {
-          return function(d, i) { return; };
-        }
-        return function(d, i) { return d[axis]; };
-      }
-      var xAxis = valueFunc(self.xName);
-      var yAxis = valueFunc(self.yName);
-      return {
-        name: name,
-        values: d.values
-        .map(function(d, i) {return {x: xAxis(d, i), y: yAxis(d, i)}; })
-      };
+      var d = data.filter(function(d) {return d.name === name;})[0];
+      return { name: name, values: d.values };
     });
 
     x.domain([
       d3.min(series, function(c) { return d3.min(c.values, ramda.path('x')); }),
-      d3.max(series, function(c) { return d3.max(c.values, ramda.path('x')); })
-    ]);
-
-    y.domain([
-      d3.min(series, function(c) { return d3.min(c.values, ramda.path('y')); }),
-      d3.max(series, function(c) { return d3.max(c.values, ramda.path('y')); })
-    ]);
+      d3.max(series, function(c) { return d3.max(c.values, ramda.path('x')); })]);
+    y.domain([self.range.yMin, self.range.yMax]);
 
     svg.selectAll("*").remove();
     svg.append("g")
@@ -158,6 +131,9 @@ app.controller('DiagramCtrl', function($scope) {
     if (!$scope.data) {
       return;
     }
+    var nonDistinctParams = Object.keys($scope.params).filter(function(param) {
+      return $scope.params[param].values.length - $scope.params[param].hide.length > 1;
+    });
     var newData = $scope.data.filter(function(d) {
       var filtered = true;
       Object.keys($scope.params).forEach(function(param) {
@@ -165,16 +141,53 @@ app.controller('DiagramCtrl', function($scope) {
         filtered = filtered && ($scope.params[param].hide.indexOf(v) == -1);
       });
       return filtered;
+    })
+    .map(function(d) {
+      var xAxis = valueFunc(d, $scope.x);
+      var yAxis = valueFunc(d, $scope.y);
+      return {
+        name: label(d, nonDistinctParams),
+        values: d.values
+        .map(function(d, i) {return {x: xAxis(d, i), y: yAxis(d, i)}; })
+      };
     });
-    var nonDistinctParams = Object.keys($scope.params).filter(function(param) {
-      return $scope.params[param].values.length - $scope.params[param].hide.length > 1;
+    $scope.xMin = d3.min(newData, function(c) { return d3.min(c.values, ramda.path('x')); });
+    $scope.xMax = d3.max(newData, function(c) { return d3.max(c.values, ramda.path('x')); });
+    $scope.yMin = d3.min(newData, function(c) { return d3.min(c.values, ramda.path('y')); });
+    $scope.yMax = d3.max(newData, function(c) { return d3.max(c.values, ramda.path('y')); });
+    $scope.xFrom = $scope.xFrom || $scope.xMin;
+    $scope.xLen = $scope.xLen || $scope.xMax;
+    var filtered = newData.map(function(d) {
+      return {
+        name: d.name,
+        values: d.values.slice($scope.xFrom, $scope.xFrom+$scope.xLen)
+      }
     });
-    d.setData(newData, $scope.x, $scope.y, nonDistinctParams, $scope.interpolate);
+    var range = R.pick(['xMin', 'xMax', 'yMin', 'yMax'], $scope);
+    d.setData(filtered, $scope.x, $scope.y, $scope.interpolate, range);
   }
 
   $scope.$watch('x', setData);
   $scope.$watch('y', setData);
   $scope.$watch('interpolate', setData);
+  $scope.$watch('xFrom', setData);
+  $scope.$watch('xLen', setData);
+
+  function label(d, uniqueParams) {
+    var params = uniqueParams ? ramda.pick(uniqueParams, d.params) : d.params;
+    return (JSON.stringify(params)).replace(/[^ a-zA-Z0-9:,]/g, '');
+  }
+
+  function valueFunc(d, name) {
+    if (name === 'n') {
+      return function(d, i) { return i; };
+    }
+    var axis = d.headers.indexOf(name);
+    if (axis == -1) {
+      return function(d, i) { return; };
+    }
+    return function(d, i) { return d[axis]; };
+  }
 
   function setControls(data) {
     var params = {};
