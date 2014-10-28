@@ -40,6 +40,7 @@ function Diagram() {
   }
 
   self.draw = function draw() {
+
     var line = d3.svg.line()
         .interpolate(self.interpolate)
         .x(function(d) { return x(d.x); })
@@ -104,6 +105,13 @@ app.controller('DiagramCtrl', function($scope) {
   $scope.params = {};
   $scope.interpolates = ['linear', 'step', 'basis', 'bundle', 'cardinal'];
   $scope.interpolate = 'linear';
+  $scope.xFrom = $scope.xFrom || 0;
+  $scope.xLen = $scope.xLen || 1000;
+  $scope.$watch('x', setData);
+  $scope.$watch('y', setData);
+  $scope.$watch('interpolate', setData);
+  $scope.$watch('xFrom', setData);
+  $scope.$watch('xLen', setData);
 
   var d = new Diagram();
   d3.json("result.json", function(error, data) {
@@ -134,6 +142,7 @@ app.controller('DiagramCtrl', function($scope) {
     var nonDistinctParams = Object.keys($scope.params).filter(function(param) {
       return $scope.params[param].values.length - $scope.params[param].hide.length > 1;
     });
+
     var newData = $scope.data.filter(function(d) {
       var filtered = true;
       Object.keys($scope.params).forEach(function(param) {
@@ -150,30 +159,20 @@ app.controller('DiagramCtrl', function($scope) {
       return {
         name: label(d, nonDistinctParams),
         values: d.values
-        .map(function(d, i) {return {x: xAxis(d, i), y: yAxis(d, i)}; })
+        .slice(1*$scope.xFrom, 1*$scope.xFrom+$scope.xLen)
+        .map(function(d, i) {
+          return {x: xAxis(d, i), y: yAxis(d, i)}; })
       };
     });
+
     $scope.xMin = d3.min(newData, function(c) { return d3.min(c.values, ramda.path('x')); });
     $scope.xMax = d3.max(newData, function(c) { return d3.max(c.values, ramda.path('x')); });
     $scope.yMin = d3.min(newData, function(c) { return d3.min(c.values, ramda.path('y')); });
     $scope.yMax = d3.max(newData, function(c) { return d3.max(c.values, ramda.path('y')); });
-    $scope.xFrom = $scope.xFrom || $scope.xMin;
-    $scope.xLen = $scope.xLen || $scope.xMax;
-    var filtered = newData.map(function(d) {
-      return {
-        name: d.name,
-        values: d.values.slice($scope.xFrom, $scope.xFrom+$scope.xLen)
-      }
-    });
     var range = R.pick(['xMin', 'xMax', 'yMin', 'yMax'], $scope);
-    d.setData(filtered, $scope.x, $scope.y, $scope.interpolate, range);
-  }
 
-  $scope.$watch('x', setData);
-  $scope.$watch('y', setData);
-  $scope.$watch('interpolate', setData);
-  $scope.$watch('xFrom', setData);
-  $scope.$watch('xLen', setData);
+    d.setData(newData, $scope.x, $scope.y, $scope.interpolate, range);
+  }
 
   function label(d, uniqueParams) {
     var params = uniqueParams ? ramda.pick(uniqueParams, d.params) : d.params;
