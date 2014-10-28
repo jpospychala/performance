@@ -140,6 +140,8 @@ app.controller('DiagramCtrl', function($scope) {
         var v= JSON.stringify(d.params[param]);
         filtered = filtered && ($scope.params[param].hide.indexOf(v) == -1);
       });
+      filtered = filtered && (d.headers.indexOf($scope.y) > -1);
+      filtered = filtered && (d.headers.indexOf($scope.y) > -1);
       return filtered;
     })
     .map(function(d) {
