@@ -159,7 +159,7 @@ app.controller('DiagramCtrl', function($scope) {
       return {
         name: label(d, nonDistinctParams),
         values: d.values
-        .slice(1*$scope.xFrom, 1*$scope.xFrom+$scope.xLen)
+        .slice(1*$scope.xFrom, 1*$scope.xFrom+1*$scope.xLen)
         .map(function(d, i) {
           return {x: xAxis(d, i), y: yAxis(d, i)}; })
       };
