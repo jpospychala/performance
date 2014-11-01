@@ -9,15 +9,15 @@ import re
 import md5
 
 def main(argv):
-  appendToReport = False
+  overwrite = False
   verbose = False
-  doRun = True
+  dryRun = False
   doBuild = False
   configFileName = 'config.json'
   instance = None
 
   try:
-    opts, args = getopt.getopt(argv, "hbavdc:i:", ["help", "build", "append", "verbose", "dryrun", "config", "instance"])
+    opts, args = getopt.getopt(argv, "hbovdc:i:", ["help", "build", "overwrite", "verbose", "dryrun", "config", "instance"])
   except getopt.GetoptError:
     usage()
     sys.exit(2)
@@ -27,12 +27,12 @@ def main(argv):
       sys.exit()
     if opt in ("-b", "--build"):
       doBuild = True
-    if opt in ("-a", "--append"):
-      appendToReport = True
+    if opt in ("-o", "--overwrite"):
+      overwrite = True
     if opt in ("-v", "--verbose"):
       verbose = True
     if opt in ("-d", "--dryrun"):
-      doRun = False
+      dryRun = True
     if opt in ("-c", "--config"):
       configFileName = arg
     if opt in ("-i", "--instance"):
@@ -43,12 +43,10 @@ def main(argv):
   with open(configFileName, 'r') as f:
     configFile = json.load(f)
 
-  report = []
-  if appendToReport:
-    with open('report/result.json', 'r') as f:
-      report = json.load(f)
+  with open('report/result.json', 'r') as f:
+    report = json.load(f)
 
-  process(configFile, configName, report, verbose, doRun, doBuild, instance)
+  process(configFile, configName, report, verbose, dryRun, doBuild, instance, overwrite)
 
 def usage():
   print "runner.py [-hadv] [-c config_file] [config]"
@@ -60,12 +58,12 @@ def usage():
   print "-v --verbose    verbose"
 
 
-def process(configFile, configName, runreport, verbose, doRun, doBuild, instance):
+def process(configFile, configName, runreport, verbose, dryRun, doBuild, instance, overwrite):
   allVariants = []
   for name, config in configFile.items():
     if not configName or name == configName:
       print name
-      if doRun and doBuild and "build" in config:
+      if not dryRun and doBuild and "build" in config:
           cwd = None
           if "workdir" in config:
               cwd = config["workdir"]
@@ -89,13 +87,13 @@ def process(configFile, configName, runreport, verbose, doRun, doBuild, instance
         continue
 
     wasRun = [r["id"] for r in runreport if r["id"] == id]
-    if wasRun and id != instance:
+    if not overwrite and wasRun and id != instance:
         print '{0}/{1} {2} skipping {3} {2}'.format(i, n, id, json.dumps(variant["config"]))
         continue
 
     print '{0}/{1} executing {3} {2}'.format(i, n, id, json.dumps(variant["config"]))
 
-    if not doRun:
+    if dryRun:
       continue
 
     logpaths = run(variant, id, verbose)
