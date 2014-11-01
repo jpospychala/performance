@@ -74,5 +74,17 @@
       "n": [2, 200],
       "time": [0, 5, 10, 50, 100]
     }
+  },
+  "sleep_java": {
+    "workdir": "./test/java",
+    "params_style": "key_value",
+    "build": ["javac", "Sleep.java"],
+    "tasks": {
+      "sleep": ["java", "Sleep"]
+    },
+    "options": {
+      "n": [2, 200],
+      "time": [0, 5, 10, 50, 100]
+    }
   }
 }
