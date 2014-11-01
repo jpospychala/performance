@@ -12,11 +12,12 @@ def main(argv):
   appendToReport = False
   verbose = False
   doRun = True
+  doBuild = False
   configFileName = 'config.json'
   instance = None
 
   try:
-    opts, args = getopt.getopt(argv, "havdc:i:", ["help", "append", "verbose", "dryrun", "config", "instance"])
+    opts, args = getopt.getopt(argv, "hbavdc:i:", ["help", "build", "append", "verbose", "dryrun", "config", "instance"])
   except getopt.GetoptError:
     usage()
     sys.exit(2)
@@ -24,6 +25,8 @@ def main(argv):
     if opt in ("-h", "--help"):
       usage()
       sys.exit()
+    if opt in ("-b", "--build"):
+      doBuild = True
     if opt in ("-a", "--append"):
       appendToReport = True
     if opt in ("-v", "--verbose"):
@@ -45,22 +48,28 @@ def main(argv):
     with open('report/result.json', 'r') as f:
       report = json.load(f)
 
-  process(configFile, configName, report, verbose, doRun, instance)
+  process(configFile, configName, report, verbose, doRun, doBuild, instance)
 
 def usage():
   print "runner.py [-hadv] [-c config_file] [config]"
   print "-a --append     append results rather than overwrite"
+  print "-b --build      run build step if configured"
   print "-c config_file  configuration file, default: config.json"
   print "-d --dryrun     don't actually run anything"
   print "-h              print this information"
   print "-v --verbose    verbose"
 
 
-def process(configFile, configName, runreport, verbose, doRun, instance):
+def process(configFile, configName, runreport, verbose, doRun, doBuild, instance):
   allVariants = []
   for name, config in configFile.items():
     if not configName or name == configName:
       print name
+      if doRun and doBuild and "build" in config:
+          cwd = None
+          if "workdir" in config:
+              cwd = config["workdir"]
+          subprocess.call(config["build"], cwd=cwd)
       config['options'].update({'config_name': name})
       variantsList = variants(config['options'])
       for variant in variantsList:
