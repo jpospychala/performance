@@ -202,9 +202,10 @@ app.controller('DiagramCtrl', function($scope) {
       Object.keys(d.params).forEach(function(param) {
         var newVal = JSON.stringify(d.params[param]);
         if (! params[param]) {
-          params[param] = {values: [newVal], hide: []};
+          params[param] = {values: [newVal], hide: [newVal]};
         } else if (params[param].values.indexOf(newVal) == -1) {
           params[param].values.push(newVal);
+          params[param].hide.push(newVal);
         }
       });
     });
