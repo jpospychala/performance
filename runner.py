@@ -121,19 +121,22 @@ def run(config, id, verbose):
   logPaths = {}
   if not os.path.exists(logdir):
     os.makedirs(logdir)
+  cwd = None
+  if "workdir" in config:
+    cwd = config["workdir"]
   if "before" in config:
-    subprocess.call(config["before"])
+    subprocess.call(config["before"], cwd=cwd)
   for taskName, t in config["tasks"].items():
     logpath = logdir + taskName + '.log'
     logPaths[taskName] = logpath
     if verbose:
       print logpath
-    p = subprocess.Popen(t + [json.dumps(config["config"])], stdout=open(logpath,'w+'))
+    p = subprocess.Popen(t + [json.dumps(config["config"])], stdout=open(logpath,'w+'), cwd=cwd)
     processes.append(p)
   for p in processes:
     p.wait()
   if "after" in config:
-    subprocess.call(config["after"])
+    subprocess.call(config["after"], cwd=cwd)
   return logPaths
 
 
