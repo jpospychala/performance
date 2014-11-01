@@ -2,3 +2,5 @@ node_modules
 results
 report/result.json
 .vagrant
+
+*.class
