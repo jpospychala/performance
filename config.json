@@ -1,12 +1,13 @@
 {
   "rabbits": {
+    "workdir": "rabbit",
     "tasks": {
       "consumer": ["node", "./rabbit/consumer.js"],
       "producer": ["node", "./rabbit/producer.js"]
     },
-    "daemons": [
-      "rabbitmq-server"
-    ],
+    "build": ["make", "rabbit_docker_image"],
+    "before": ["docker", "start", "rabbit_docker"],
+    "after": ["docker", "stop", "rabbit_docker"],
     "options": {
       "n": [1, 2],
       "msgsToSend": [10000],
@@ -21,13 +22,14 @@
     }
   },
   "rabbits_latency": {
+    "workdir": "rabbit",
     "tasks": {
-      "consumer": ["node", "./rabbit/consumer.js"],
-      "producer": ["node", "./rabbit/producer.js"]
+      "consumer": ["node", "consumer.js"],
+      "producer": ["node", "producer.js"]
     },
-    "daemons": [
-      "make rabbitmq-server"
-    ],
+    "build": ["make", "rabbit_docker_image"],
+    "before": ["docker", "start", "rabbit_docker"],
+    "after": ["docker", "stop", "rabbit_docker"],
     "options": {
       "n": [1, 2],
       "msgsToSend": [100],
@@ -67,11 +69,11 @@
       "producer": ["java", "-cp", "target/deps/amqp-client-3.3.5.jar:target/rabbits-0.0.1-SNAPSHOT.jar", "Producer"],
       "consumer": ["java", "-cp", "target/deps/amqp-client-3.3.5.jar:target/rabbits-0.0.1-SNAPSHOT.jar", "Consumer"]
     },
-    "daemons": [
-    ],
+    "before": ["docker", "start", "rabbit_docker"],
+    "after": ["docker", "stop", "rabbit_docker"],
     "options": {
       "n": [1, 2],
-      "msgsToSend": [10000],
+      "msgsToSend": [10],
       "msgSendDelay": [10, 50, 100],
       "msgAckDelay": [0],
       "deliveryMode": [1],
@@ -83,13 +85,11 @@
     }
   },
   "test": {
-    "before": ["node", "./test/before.js"],
+    "beforeEach": ["node", "./test/before.js"],
     "tasks": {
       "sleep": ["node", "./test/count.js"]
     },
-    "after": ["node", "./test/after.js"],
-    "daemons": [
-    ],
+    "afterEach": ["node", "./test/after.js"],
     "options": {
       "n": [2, 200],
       "time": [0, 5, 10, 50, 100]

@@ -7,6 +7,7 @@ import json
 import subprocess
 import re
 import md5
+import time
 
 def main(argv):
   overwrite = False
@@ -43,8 +44,11 @@ def main(argv):
   with open(configFileName, 'r') as f:
     configFile = json.load(f)
 
-  with open('report/result.json', 'r') as f:
-    report = json.load(f)
+  try:
+    with open('report/result.json', 'r') as f:
+      report = json.load(f)
+  except:
+    report = []
 
   process(configFile, configName, report, verbose, dryRun, doBuild, instance, overwrite)
 
@@ -73,10 +77,10 @@ def process(configFile, configName, runreport, verbose, dryRun, doBuild, instanc
       allVariants.append(c)
 
     if not dryRun and doBuild and "build" in config:
-        cwd = None
-        if "workdir" in config:
-            cwd = config["workdir"]
-        subprocess.call(config["build"], cwd=cwd)
+      subprocess.call(config["build"], cwd=config.get("workdir"))
+
+    if not dryRun and "before" in config:
+      subprocess.call(config["before"], cwd=config.get("workdir"))
 
     i = 0;
     n = len(allVariants)
@@ -108,6 +112,9 @@ def process(configFile, configName, runreport, verbose, dryRun, doBuild, instanc
         with open('report/result.json', 'w') as f:
           json.dump(runreport, f)
 
+    if not dryRun and "before" in config:
+      subprocess.call(config["before"], cwd=config.get("workdir"))
+
 
 def readLog(path):
   headers = []
@@ -130,8 +137,8 @@ def run(config, id, verbose):
   if not os.path.exists(logdir):
     os.makedirs(logdir)
   cwd = config.get("workdir")
-  if "before" in config:
-    subprocess.call(config["before"], cwd=cwd)
+  if "beforeEach" in config:
+    subprocess.call(config["beforeEach"], cwd=cwd)
   for taskName, t in config["tasks"].items():
     logpath = logdir + taskName + '.log'
     logPaths[taskName] = logpath
@@ -141,8 +148,8 @@ def run(config, id, verbose):
     processes.append(p)
   for p in processes:
     p.wait()
-  if "after" in config:
-    subprocess.call(config["after"], cwd=cwd)
+  if "afterEach" in config:
+    subprocess.call(config["afterEach"], cwd=cwd)
   return logPaths
 
 
