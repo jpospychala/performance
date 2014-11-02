@@ -59,53 +59,54 @@ def usage():
 
 
 def process(configFile, configName, runreport, verbose, dryRun, doBuild, instance, overwrite):
-  allVariants = []
   for name, config in configFile.items():
-    if not configName or name == configName:
-      print name
-      if not dryRun and doBuild and "build" in config:
-          cwd = None
-          if "workdir" in config:
-              cwd = config["workdir"]
-          subprocess.call(config["build"], cwd=cwd)
-      config['options'].update({'config_name': name})
-      variantsList = variants(config['options'])
-      for variant in variantsList:
-        c = config.copy()
-        c.update({"config": variant})
-        allVariants.append(c)
-
-  i = 0;
-  n = len(allVariants)
-  for variant in allVariants:
-    i += 1
-    idmd5 = md5.new()
-    idmd5.update(json.dumps(variant["config"]))
-    id = idmd5.hexdigest()
-
-    if instance != None and instance != id:
-        continue
-
-    wasRun = [r["id"] for r in runreport if r["id"] == id]
-    if not overwrite and wasRun and id != instance:
-        print '{0}/{1} {2} skipping {3} {2}'.format(i, n, id, json.dumps(variant["config"]))
-        continue
-
-    print '{0}/{1} executing {3} {2}'.format(i, n, id, json.dumps(variant["config"]))
-
-    if dryRun:
+    if configName and name != configName:
       continue
 
-    logpaths = run(variant, id, verbose)
-    for task, path in logpaths.items():
-      headers, values = readLog(path)
-      params = variant["config"].copy()
-      params.update({"task": task})
-      runreport.append({"id": id, "params": params, "headers": headers, "values": values})
+    print name
+    allVariants = []
+    config['options'].update({'config_name': name})
+    variantsList = variants(config['options'])
+    for variant in variantsList:
+      c = config.copy()
+      c.update({"config": variant})
+      allVariants.append(c)
 
-      # update report file continuously
-      with open('report/result.json', 'w') as f:
-        json.dump(runreport, f)
+    if not dryRun and doBuild and "build" in config:
+        cwd = None
+        if "workdir" in config:
+            cwd = config["workdir"]
+        subprocess.call(config["build"], cwd=cwd)
+
+    i = 0;
+    n = len(allVariants)
+    for variant in allVariants:
+      i += 1
+      id = createId(variant)
+
+      if instance != None and instance != id:
+          continue
+
+      wasRun = [r["id"] for r in runreport if r["id"] == id]
+      if not overwrite and wasRun and id != instance:
+          print '{0}/{1} {2} skipping {3} {2}'.format(i, n, id, json.dumps(variant["config"]))
+          continue
+
+      print '{0}/{1} executing {3} {2}'.format(i, n, id, json.dumps(variant["config"]))
+
+      if dryRun:
+        continue
+
+      logpaths = run(variant, id, verbose)
+      for task, path in logpaths.items():
+        headers, values = readLog(path)
+        params = variant["config"].copy()
+        params.update({"task": task})
+        runreport.append({"id": id, "params": params, "headers": headers, "values": values})
+
+        # update report file continuously
+        with open('report/result.json', 'w') as f:
+          json.dump(runreport, f)
 
 
 def readLog(path):
@@ -136,16 +137,26 @@ def run(config, id, verbose):
     logPaths[taskName] = logpath
     if verbose:
       print logpath
-    params = [json.dumps(config["config"])]
-    if config.get("params_style") == "key_value":
-      params = ["{0}={1}".format(k, v) for k, v in config["config"].items()]
-    p = subprocess.Popen(t + params, stdout=open(logpath,'w+'), cwd=cwd)
+    p = subprocess.Popen(t + params(config), stdout=open(logpath,'w+'), cwd=cwd)
     processes.append(p)
   for p in processes:
     p.wait()
   if "after" in config:
     subprocess.call(config["after"], cwd=cwd)
   return logPaths
+
+
+def params(config):
+  params = [json.dumps(config["config"])]
+  if config.get("params_style") == "key_value":
+    params = ["{0}={1}".format(k, v) for k, v in config["config"].items()]
+  return params
+
+
+def createId(variant):
+  idmd5 = md5.new()
+  idmd5.update(json.dumps(variant["config"]))
+  return idmd5.hexdigest()
 
 
 def variants(dict):
@@ -164,6 +175,7 @@ def variants(dict):
       results.append(subv)
   dict[field] = values
   return results
+
 
 if __name__ == "__main__":
   main(sys.argv[1:])
