@@ -39,8 +39,10 @@ body {
 <script src="lib/d3.v3.js"></script>
 <script src="lib/ramda.min.js"></script>
 <script src="lib/angular.min.js"></script>
+<script src="diagram.js"></script>
 <script src="report.js"></script>
 <div ng-controller="DiagramCtrl">
+  <div id="diagram"></div>
   <table>
     <tr>
       <td>X<td/>
@@ -67,6 +69,22 @@ body {
       <td ng-repeat="value in values.values">
         <input type="checkbox" ng-checked="values.hide.indexOf(value) == -1" ng-click="toggle(value, values.hide)"> {{value}}
       </td>
+    </tr>
+  </table>
+  <table border="1">
+    <tr>
+      <td>Name</td>
+      <td>Min</td>
+      <td>Max</td>
+      <td>Median</td>
+      <td>Avg</td>
+    </tr>
+    <tr ng-repeat="serie in series">
+      <td>{{serie.name}}</td>
+      <td>{{serie.min}}</td>
+      <td>{{serie.max}}</td>
+      <td>{{serie.median}}</td>
+      <td>{{serie.avg}}</td>
     </tr>
   </table>
 </div>
