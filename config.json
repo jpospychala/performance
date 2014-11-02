@@ -60,10 +60,12 @@
     }
   },
   "rabbits_latency_java": {
-    "build": ["mvn", "-f", "rabbit/java/pom.xml", "clean", "install"],
+    "workdir": "./rabbit/java",
+    "params_style": "key_value",
+    "build": ["mvn", "clean", "install"],
     "tasks": {
-      "producer": ["java", "-cp", "rabbit/java/target/deps/jackson-core-2.4.3.jar:rabbit/java/target/deps/jackson-annotations-2.4.0.jar:rabbit/java/target/deps/jackson-databind-2.4.3.jar:rabbit/java/target/deps/amqp-client-3.3.5.jar:rabbit/java/target/rabbits-0.0.1-SNAPSHOT.jar", "Producer"],
-      "consumer": ["java", "-cp", "rabbit/java/target/deps/jackson-core-2.4.3.jar:rabbit/java/target/deps/jackson-annotations-2.4.0.jar:rabbit/java/target/deps/jackson-databind-2.4.3.jar:rabbit/java/target/deps/amqp-client-3.3.5.jar:rabbit/java/target/rabbits-0.0.1-SNAPSHOT.jar", "Consumer"]
+      "producer": ["java", "-cp", "target/deps/amqp-client-3.3.5.jar:target/rabbits-0.0.1-SNAPSHOT.jar", "Producer"],
+      "consumer": ["java", "-cp", "target/deps/amqp-client-3.3.5.jar:target/rabbits-0.0.1-SNAPSHOT.jar", "Consumer"]
     },
     "daemons": [
     ],
