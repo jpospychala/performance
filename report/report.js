@@ -77,12 +77,15 @@ app.controller('DiagramCtrl', function($scope) {
       .slice(1*$scope.xFrom, 1*$scope.xFrom+1*$scope.xLen)
       .map(function(d, i) {
         return {x: xAxis(d, i), y: yAxis(d, i)}; });
+      var yvalues = values.map(ramda.path('y')).sort();
       return {
         name: label(d),
-        min: d3.min(values, ramda.path('y')),
-        max: d3.max(values, ramda.path('y')),
-        avg: d3.mean(values, ramda.path('y')),
-        median: d3.median(values, ramda.path('y')),
+        min: d3.min(yvalues),
+        max: d3.max(yvalues),
+        avg: d3.mean(yvalues),
+        q1: d3.quantile(yvalues, 0.25),
+        q2: d3.quantile(yvalues, 0.5),
+        q3: d3.quantile(yvalues, 0.5),
         values: values
       };
     }

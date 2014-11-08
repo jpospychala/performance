@@ -76,15 +76,20 @@ body {
       <td>Name</td>
       <td>Min</td>
       <td>Max</td>
-      <td>Median</td>
+      <td>0.25-quantile</td>
+      <td>0.5-quantile</td>
+      <td>0.75-quantile</td>
       <td>Avg</td>
     </tr>
     <tr ng-repeat="serie in series">
       <td>{{serie.name}}</td>
       <td>{{serie.min}}</td>
       <td>{{serie.max}}</td>
-      <td>{{serie.median}}</td>
+      <td>{{serie.q1}}</td>
+      <td>{{serie.q2}}</td>
+      <td>{{serie.q3}}</td>
       <td>{{serie.avg}}</td>
+
     </tr>
   </table>
 </div>
