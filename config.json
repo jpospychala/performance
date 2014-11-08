@@ -105,5 +105,17 @@
       "n": [2, 1000],
       "time": [0, 5, 10, 50, 100]
     }
+  },
+  "sleep_c": {
+    "workdir": "./sleep/c",
+    "params_style": "key_value",
+    "build": ["gcc", "sleep.c", "-o", "sleep"],
+    "tasks": {
+      "sleep": ["./sleep"]
+    },
+    "options": {
+      "n": [2, 1000],
+      "time": [0, 5, 10, 50, 100]
+    }
   }
 }
