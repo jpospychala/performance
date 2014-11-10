@@ -79,6 +79,8 @@ body {
       <td>0.25-quantile</td>
       <td>0.5-quantile</td>
       <td>0.75-quantile</td>
+      <td>0.90-quantile</td>
+      <td>0.99-quantile</td>
       <td>Avg</td>
     </tr>
     <tr ng-repeat="serie in series">
@@ -88,6 +90,8 @@ body {
       <td>{{serie.q1}}</td>
       <td>{{serie.q2}}</td>
       <td>{{serie.q3}}</td>
+      <td>{{serie.q9}}</td>
+      <td>{{serie.q99}}</td>
       <td>{{serie.avg}}</td>
 
     </tr>

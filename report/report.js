@@ -85,7 +85,9 @@ app.controller('DiagramCtrl', function($scope) {
         avg: d3.mean(yvalues),
         q1: d3.quantile(yvalues, 0.25),
         q2: d3.quantile(yvalues, 0.5),
-        q3: d3.quantile(yvalues, 0.5),
+        q3: d3.quantile(yvalues, 0.75),
+        q9: d3.quantile(yvalues, 0.9).toFixed(4),
+        q99: d3.quantile(yvalues, 0.99).toFixed(4),
         values: values
       };
     }
