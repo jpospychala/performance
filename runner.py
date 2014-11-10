@@ -63,6 +63,7 @@ def usage():
 
 
 def process(configFile, configName, runreport, verbose, dryRun, doBuild, instance, overwrite):
+  info = sysinfo()
   for name, config in configFile.items():
     if configName and name != configName:
       continue
@@ -70,6 +71,7 @@ def process(configFile, configName, runreport, verbose, dryRun, doBuild, instanc
     print name
     allVariants = []
     config['options'].update({'config_name': name})
+    config['options'].update(info)
     variantsList = variants(config['options'])
     for variant in variantsList:
       c = config.copy()
@@ -182,6 +184,27 @@ def variants(dict):
       results.append(subv)
   dict[field] = values
   return results
+
+
+def read_procfile(path):
+  out = {}
+  with open(path, 'r') as f:
+    for l in f:
+       key_val = [x.strip() for x in l.split(':')]
+       if len(key_val) == 2:
+         out[key_val[0]] = key_val[1]
+  return out
+
+
+def sysinfo():
+  all = read_procfile('/proc/cpuinfo')
+  cpuinfo = dict([(k, all[k]) for k in ['cpu cores', 'model name', 'bogomips']])
+  all = read_procfile('/proc/meminfo')
+  meminfo = dict([(k, all[k]) for k in ['MemTotal']])
+  out = {}
+  out.update(cpuinfo)
+  out.update(meminfo)
+  return out
 
 
 if __name__ == "__main__":
