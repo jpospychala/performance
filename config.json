@@ -2,15 +2,15 @@
   "rabbits": {
     "workdir": "rabbit",
     "tasks": {
-      "consumer": ["node", "./rabbit/consumer.js"],
-      "producer": ["node", "./rabbit/producer.js"]
+      "consumer": ["node", "consumer.js"],
+      "producer": ["node", "producer.js"]
     },
     "build": ["make", "rabbit_docker_image"],
     "before": ["docker", "start", "rabbit_docker"],
     "after": ["docker", "stop", "rabbit_docker"],
     "options": {
       "n": [1, 2],
-      "msgsToSend": [10000],
+      "msgsToSend": [1000],
       "msgSendDelay": [50, 0],
       "msgAckDelay": [0, 50],
       "msgOpts": [{}, {"persistent": true}],
@@ -32,7 +32,7 @@
     "after": ["docker", "stop", "rabbit_docker"],
     "options": {
       "n": [1, 2],
-      "msgsToSend": [100],
+      "msgsToSend": [1000],
       "msgSendDelay": [10, 50, 100],
       "msgAckDelay": [0],
       "deliveryMode": [1],
@@ -73,7 +73,7 @@
     "after": ["docker", "stop", "rabbit_docker"],
     "options": {
       "n": [1, 2],
-      "msgsToSend": [10],
+      "msgsToSend": [1000],
       "msgSendDelay": [10, 50, 100],
       "msgAckDelay": [0],
       "deliveryMode": [1],
