@@ -6,8 +6,8 @@ app.controller('DiagramCtrl', function($scope) {
   $scope.interpolate = 'linear';
   $scope.xFrom = $scope.xFrom || 0;
   $scope.xLen = $scope.xLen || 1000;
-  $scope.$watch('x', setData);
-  $scope.$watch('y', setData);
+  $scope.$watch('x', switchHeader);
+  $scope.$watch('y', switchHeader);
   $scope.$watch('interpolate', setData);
   $scope.$watch('xFrom', setData);
   $scope.$watch('xLen', setData);
@@ -18,11 +18,10 @@ app.controller('DiagramCtrl', function($scope) {
       console.warn(error);
     }
     data = data.filter(function(d) {return d.values.length > 0; });
-    $scope.data = data;
+    $scope.raw = data;
     $scope.headers = findHeaders(data);
     $scope.x = $scope.headers[0];
     $scope.y = $scope.headers[1];
-    $scope.params = findParams(data);
     $scope.$apply();
   });
 
@@ -35,6 +34,11 @@ app.controller('DiagramCtrl', function($scope) {
     }
     setData();
   };
+
+  function switchHeader() {
+    $scope.data = withHeaders($scope.raw, [$scope.x, $scope.y]);
+    $scope.params = findParams($scope.data);
+  }
 
   function setData() {
     if (!$scope.data) {
@@ -104,6 +108,12 @@ app.controller('DiagramCtrl', function($scope) {
       return function(d, i) { return; };
     }
     return function(d, i) { return d[axis]; };
+  }
+
+  function withHeaders(data, headers) {
+    return ramda.filter(function(d) {
+      return ramda.intersection(d.headers, headers).length > 0;
+    }, data);
   }
 
   function findHeaders(data) {
