@@ -78,7 +78,7 @@ def process(configFile, configName, runreport, verbose, dryRun, doBuild, instanc
       c.update({"config": variant})
       allVariants.append(c)
 
-    if not dryRun and doBuild and "build" in config:
+    if doBuild and "build" in config:
       subprocess.call(config["build"], cwd=config.get("workdir"))
 
     if not dryRun and "before" in config:
