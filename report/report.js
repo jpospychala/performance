@@ -18,9 +18,11 @@ app.controller('DiagramCtrl', function($scope) {
       console.warn(error);
     }
     data = data.filter(function(d) {return d.values.length > 0; });
-    setControls(data);
     $scope.data = data;
-    setData();
+    $scope.headers = findHeaders(data);
+    $scope.x = $scope.headers[0];
+    $scope.y = $scope.headers[1];
+    $scope.params = findParams(data);
     $scope.$apply();
   });
 
@@ -104,8 +106,7 @@ app.controller('DiagramCtrl', function($scope) {
     return function(d, i) { return d[axis]; };
   }
 
-  function setControls(data) {
-    var params = {};
+  function findHeaders(data) {
     var headers = ['n'];
     data.forEach(function(d) {
       d.headers.forEach(function(header) {
@@ -113,6 +114,13 @@ app.controller('DiagramCtrl', function($scope) {
           headers.push(header);
         }
       });
+    });
+    return headers;
+  }
+
+  function findParams(data) {
+    var params = {};
+    data.forEach(function(d) {
       Object.keys(d.params).forEach(function(param) {
         var newVal = JSON.stringify(d.params[param]);
         if (! params[param]) {
@@ -128,9 +136,6 @@ app.controller('DiagramCtrl', function($scope) {
         delete params[param];
       }
     });
-    $scope.params = params;
-    $scope.headers = headers;
-    $scope.x = headers[0];
-    $scope.y = headers[1];
+    return params;
   };
 });
