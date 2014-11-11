@@ -201,9 +201,16 @@ def sysinfo():
   cpuinfo = dict([(k, all[k]) for k in ['cpu cores', 'model name', 'bogomips']])
   all = read_procfile('/proc/meminfo')
   meminfo = dict([(k, all[k]) for k in ['MemTotal']])
+  oslabel = None
+  path = os.path.expanduser('~/.perflabel')
+  if os.path.isfile(path):
+    with open(path, 'r') as f:
+      oslabel = f.next().strip()
   out = {}
   out.update(cpuinfo)
   out.update(meminfo)
+  if oslabel:
+      out['oslabel'] = oslabel
   return out
 
 
