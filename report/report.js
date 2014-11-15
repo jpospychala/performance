@@ -88,7 +88,7 @@ app.controller('DiagramCtrl', function($scope) {
         name: label(d),
         min: d3.min(yvalues),
         max: d3.max(yvalues),
-        avg: d3.mean(yvalues),
+        avg: d3.mean(yvalues).toFixed(4),
         q1: d3.quantile(yvalues, 0.25),
         q2: d3.quantile(yvalues, 0.5),
         q3: d3.quantile(yvalues, 0.75),
