@@ -188,19 +188,22 @@ def variants(dict):
 
 def read_procfile(path):
   out = {}
-  with open(path, 'r') as f:
-    for l in f:
-       key_val = [x.strip() for x in l.split(':')]
-       if len(key_val) == 2:
-         out[key_val[0]] = key_val[1]
+  try:
+    with open(path, 'r') as f:
+      for l in f:
+        key_val = [x.strip() for x in l.split(':')]
+        if len(key_val) == 2:
+          out[key_val[0]] = key_val[1]
+  except:
+    pass
   return out
 
 
 def sysinfo():
   all = read_procfile('/proc/cpuinfo')
-  cpuinfo = dict([(k, all[k]) for k in ['cpu cores', 'model name', 'bogomips']])
+  cpuinfo = dict([(k, all.get(k, '')) for k in ['cpu cores', 'model name', 'bogomips']])
   all = read_procfile('/proc/meminfo')
-  meminfo = dict([(k, all[k]) for k in ['MemTotal']])
+  meminfo = dict([(k, all.get(k, '')) for k in ['MemTotal']])
   oslabel = None
   path = os.path.expanduser('~/.perflabel')
   if os.path.isfile(path):
