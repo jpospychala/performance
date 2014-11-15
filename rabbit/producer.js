@@ -3,6 +3,7 @@ var when = require('when');
 var config = JSON.parse(process.argv[2]);
 
 var msgsToSend = config.msgsToSend;
+var padding = new Array(Math.max(0, config.msgSize - (Date.now()+'').length)).join(' ');
 
 setTimeout(start, 1000);
 
@@ -25,7 +26,7 @@ function start() {
                 }
 
                 var now = Date.now();
-                var msg = '' + (now);
+                var msg = padding + (now);
                 msgsToSend--;
                 ch.sendToQueue(q, new Buffer(msg), {deliveryMode: config.deliveryMode})
                 console.log(now+','+(now-start));

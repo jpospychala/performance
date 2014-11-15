@@ -81,7 +81,7 @@
       "queueDurable": [false],
       "autoAck": [true],
       "prefetchCount": [0],
-      "msgSize": [13]
+      "msgSize": [13, 26]
     }
   },
   "sleep_node": {
