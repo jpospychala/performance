@@ -1,26 +1,4 @@
 {
-  "rabbits": {
-    "workdir": "rabbit",
-    "tasks": {
-      "consumer": ["node", "consumer.js"],
-      "producer": ["node", "producer.js"]
-    },
-    "build": ["make", "rabbit_docker_image"],
-    "before": ["docker", "start", "rabbit_docker"],
-    "after": ["docker", "stop", "rabbit_docker"],
-    "options": {
-      "n": [1, 2],
-      "msgsToSend": [1000],
-      "msgSendDelay": [50, 0],
-      "msgAckDelay": [0, 50],
-      "msgOpts": [{}, {"persistent": true}],
-      "queue": ["q2"],
-      "queueOpts": [{"autoDelete": true, "durable": false}],
-      "consumerOpts": [{"noAck": true}, {"noAck": false}],
-      "prefetchCount": [1, 10, false],
-      "msgSize": [13]
-    }
-  },
   "rabbits_latency": {
     "workdir": "rabbit",
     "tasks": {
@@ -40,24 +18,6 @@
       "queueDurable": [false],
       "autoAck": [true],
       "prefetchCount": [0],
-      "msgSize": [13]
-    }
-  },
-  "w3_latency": {
-    "workdir": "./w3/shared/npm",
-    "build": ["make", "build"],
-    "tasks": {
-      "consumer": ["node", "test/consumer.js"],
-      "producer": ["node", "test/producer.js"]
-    },
-    "daemons": [
-      "make rabbitmq-server"
-    ],
-    "options": {
-      "n": [1, 2],
-      "msgsToSend": [100],
-      "msgSendDelay": [10, 50, 100],
-      "msgAckDelay": [0],
       "msgSize": [13]
     }
   },
