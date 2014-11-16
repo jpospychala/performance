@@ -16,9 +16,14 @@ public class Producer {
     int msgsToSend = Integer.parseInt(params.get("msgsToSend"));
     int msgSendDelay = Integer.parseInt(params.get("msgSendDelay"));
     int deliveryMode = Integer.parseInt(params.get("deliveryMode"));
+    int msgSize = Integer.parseInt(params.get("msgSize"));
     BasicProperties msgProperties = new BasicProperties().builder()
     .deliveryMode(deliveryMode)
     .build();
+    StringBuilder padding = new StringBuilder();
+    for (int i = 0; i < Math.max(0, msgSize - Long.toString(System.currentTimeMillis()).length); i++) {
+      padding.append(' ');
+    }
 
     ConnectionFactory factory = new ConnectionFactory();
     factory.setHost("localhost");
