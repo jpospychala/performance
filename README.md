@@ -29,6 +29,7 @@ Run the benchmark runner:
 |sleep_c             |usleep(milisec) accuracy               |
 |rabbits_latency     |producer-consumer latency, node amqplib|
 |rabbits_latency_java|producer-consumer latency, Java Client |
+|zeromq_latency     |producer-consumer latency, node zmq     |
 
 See reports (requires npm install http-server):
 ```
