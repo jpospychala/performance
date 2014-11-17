@@ -45,7 +45,15 @@ app.controller('DiagramCtrl', function($scope) {
 
   function switchHeader() {
     $scope.data = withHeaders($scope.raw, [$scope.x, $scope.y]);
-    $scope.params = findParams($scope.data);
+    var newParams = findParams($scope.data);
+    if ($scope.params) {
+      Object.keys($scope.params).forEach(function (param) {
+        if (newParams[param]) {
+          newParams[param] = $scope.params[param];
+        }
+      });
+    }
+    $scope.params = newParams;
   }
 
   function setData() {
