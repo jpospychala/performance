@@ -34,6 +34,14 @@ app.controller('DiagramCtrl', function($scope) {
     }
     setData();
   };
+  $scope.toggleAll = function(params, values) {
+    if (values.length < params.length) {
+      values.splice.apply(values, [0, values.length].concat(params));
+    } else {
+      values.splice(0, values.length);
+    }
+    setData();
+  }
 
   function switchHeader() {
     $scope.data = withHeaders($scope.raw, [$scope.x, $scope.y]);

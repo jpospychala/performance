@@ -42,7 +42,6 @@ body {
 <script src="diagram.js"></script>
 <script src="report.js"></script>
 <div ng-controller="DiagramCtrl">
-  <div id="diagram"></div>
   <table>
     <tr>
       <td>X<td/>
@@ -65,12 +64,13 @@ body {
       </td>
     </tr>
     <tr ng-repeat="(param, values) in params">
-      <td>{{param}}</td>
+      <td><a href="#" ng-click="toggleAll(values.values, values.hide)">{{param}}</a></td>
       <td ng-repeat="value in values.values">
         <input type="checkbox" ng-checked="values.hide.indexOf(value) == -1" ng-click="toggle(value, values.hide)"> {{value}}
       </td>
     </tr>
   </table>
+  <div id="diagram"></div>
   <table border="1">
     <tr>
       <td>Name</td>
