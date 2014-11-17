@@ -9,7 +9,7 @@
     "before": ["docker", "start", "rabbit_docker"],
     "after": ["docker", "stop", "rabbit_docker"],
     "options": {
-      "n": [1, 2],
+      "n": [1],
       "msgsToSend": [1000],
       "msgSendDelay": [10, 50, 100],
       "msgAckDelay": [0],
@@ -18,7 +18,7 @@
       "queueDurable": [false],
       "autoAck": [true],
       "prefetchCount": [0],
-      "msgSize": [13]
+      "msgSize": [13, 26]
     }
   },
   "rabbits_latency_java": {
@@ -32,7 +32,7 @@
     "before": ["docker", "start", "rabbit_docker"],
     "after": ["docker", "stop", "rabbit_docker"],
     "options": {
-      "n": [1, 2],
+      "n": [1],
       "msgsToSend": [1000],
       "msgSendDelay": [10, 50, 100],
       "msgAckDelay": [0],
@@ -51,7 +51,7 @@
       "producer": ["node", "producer.js"]
     },
     "options": {
-      "n": [1, 2],
+      "n": [1],
       "msgsToSend": [1000],
       "msgSendDelay": [10, 50, 100],
       "msgAckDelay": [0],
