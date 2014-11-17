@@ -10,10 +10,11 @@ and presented in web report tool.
 
 Setup:
 ```
-apt-get install git node.js gcc make docker.io npm maven2 python-software-properties
-sudo add-apt-repository ppa:webupd8team/java
-sudo apt-get update
-sudo apt-get install oracle-java8-installer
+apt-get install git node.js gcc make docker.io npm g++ python-software-properties libzmq-dev
+add-apt-repository ppa:webupd8team/java
+apt-get update
+apt-get install oracle-java8-installer
+apt-get install maven2
 npm install
 ```
 Run the benchmark runner:
