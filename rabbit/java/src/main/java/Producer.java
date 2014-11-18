@@ -21,7 +21,7 @@ public class Producer {
     .deliveryMode(deliveryMode)
     .build();
     StringBuilder padding = new StringBuilder();
-    for (int i = 0; i < Math.max(0, msgSize - Long.toString(System.currentTimeMillis()).length); i++) {
+    for (int i = 0; i < Math.max(0, msgSize - Long.toString(System.currentTimeMillis()).length()); i++) {
       padding.append(' ');
     }
 
