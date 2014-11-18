@@ -1,6 +1,7 @@
 
 var app = angular.module('app', []);
 app.controller('DiagramCtrl', function($scope) {
+  var ignoredParams = ['MemTotal', 'bogomips', 'cpu cores', 'model name'];
   $scope.params = {};
   $scope.interpolates = ['linear', 'step', 'basis', 'bundle', 'cardinal'];
   $scope.interpolate = 'linear';
@@ -101,6 +102,7 @@ app.controller('DiagramCtrl', function($scope) {
         return {x: xAxis(d, i), y: yAxis(d, i)}; });
       var yvalues = values.map(ramda.path('y')).sort();
       return {
+        params: ramda.pick(uniqueParams, d.params),
         name: label(d),
         min: d3.min(yvalues),
         max: d3.max(yvalues),
@@ -148,6 +150,9 @@ app.controller('DiagramCtrl', function($scope) {
     var params = {};
     data.forEach(function(d) {
       Object.keys(d.params).forEach(function(param) {
+        if (ignoredParams.indexOf(param) > -1) {
+          return;
+        }
         var newVal = JSON.stringify(d.params[param]);
         if (! params[param]) {
           params[param] = {values: [newVal], hide: [newVal]};
