@@ -73,7 +73,7 @@ body {
   <div id="diagram"></div>
   <table border="1">
     <tr>
-      <td>Name</td>
+      <td ng-repeat="(param, values) in params">{{param}}</td>
       <td>Min</td>
       <td>Max</td>
       <td>0.25-quantile</td>
@@ -84,7 +84,7 @@ body {
       <td>Avg</td>
     </tr>
     <tr ng-repeat="serie in series">
-      <td>{{serie.name}}</td>
+      <td ng-repeat="(param, values) in params">{{serie.params[param]}}</td>
       <td>{{serie.min}}</td>
       <td>{{serie.max}}</td>
       <td>{{serie.q1}}</td>
