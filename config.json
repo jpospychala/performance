@@ -11,7 +11,7 @@
     "options": {
       "n": [1],
       "msgsToSend": [1000],
-      "msgSendDelay": [10, 50, 100],
+      "msgSendDelay": [0, 10, 50, 100],
       "msgAckDelay": [0],
       "deliveryMode": [1],
       "queue": ["q2"],
@@ -34,7 +34,7 @@
     "options": {
       "n": [1],
       "msgsToSend": [1000],
-      "msgSendDelay": [10, 50, 100],
+      "msgSendDelay": [0, 10, 50, 100],
       "msgAckDelay": [0],
       "deliveryMode": [1],
       "queue": ["q2"],
@@ -53,14 +53,14 @@
     "options": {
       "n": [1],
       "msgsToSend": [1000],
-      "msgSendDelay": [10, 50, 100],
+      "msgSendDelay": [0, 10, 50, 100],
       "msgAckDelay": [0],
       "deliveryMode": [1],
       "queue": ["q2"],
       "queueDurable": [false],
       "autoAck": [true],
       "prefetchCount": [0],
-      "msgSize": [13]
+      "msgSize": [13, 26]
     }
   },
   "sleep_node": {
