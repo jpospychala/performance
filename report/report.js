@@ -1,13 +1,12 @@
-
 var app = angular.module('app', []);
 app.controller('DiagramCtrl', function($scope) {
   var ignoredParams = ['MemTotal', 'bogomips', 'cpu cores', 'model name'];
   $scope.params = {};
-  $scope.interpolates = ['linear', 'step', 'basis', 'bundle', 'cardinal'];
-  $scope.interpolate = 'linear';
+  $scope.showSeriesDiagram = false;
+  $scope.showSummaryTable = true;
   $scope.xFrom = $scope.xFrom || 0;
   $scope.xLen = $scope.xLen || 1000;
-  $scope.$watch('x', switchHeader);
+  $scope.$watch('x', setData);
   $scope.$watch('y', switchHeader);
   $scope.$watch('interpolate', setData);
   $scope.$watch('xFrom', setData);
@@ -18,7 +17,9 @@ app.controller('DiagramCtrl', function($scope) {
     if (error) {
       console.warn(error);
     }
-    data = data.filter(function(d) {return d.values.length > 0; });
+    data = data.filter(function(d) {
+      return d.values.length > 0;
+    });
     $scope.raw = data;
     $scope.headers = findHeaders(data);
     $scope.x = $scope.headers[0];
@@ -45,10 +46,10 @@ app.controller('DiagramCtrl', function($scope) {
   }
 
   function switchHeader() {
-    $scope.data = withHeaders($scope.raw, [$scope.x, $scope.y]);
+    $scope.data = withHeaders($scope.raw, [$scope.y]);
     var newParams = findParams($scope.data);
     if ($scope.params) {
-      Object.keys($scope.params).forEach(function (param) {
+      Object.keys($scope.params).forEach(function(param) {
         if (newParams[param]) {
           newParams[param] = $scope.params[param];
         }
@@ -62,20 +63,31 @@ app.controller('DiagramCtrl', function($scope) {
       return;
     }
     var uniqueParams = Object.keys($scope.params).filter(function(param) {
-      return $scope.params[param].values.length - $scope.params[param].hide.length > 1;
+      return $scope.params[param].values.length - $scope.params[param]
+        .hide.length > 1;
     });
 
     var newData = $scope.data.filter(filterByParams)
-    .map(transformToSeries);
+      .map(transformToSeries);
 
     $scope.series = newData;
-    $scope.xMin = d3.min(newData, function(c) { return d3.min(c.values, ramda.path('x')); });
-    $scope.xMax = d3.max(newData, function(c) { return d3.max(c.values, ramda.path('x')); });
-    $scope.yMin = d3.min(newData, function(c) { return d3.min(c.values, ramda.path('y')); });
-    $scope.yMax = d3.max(newData, function(c) { return d3.max(c.values, ramda.path('y')); });
+    $scope.xMin = d3.min(newData, function(c) {
+      return d3.min(c.values, ramda.path('x'));
+    });
+    $scope.xMax = d3.max(newData, function(c) {
+      return d3.max(c.values, ramda.path('x'));
+    });
+    $scope.yMin = d3.min(newData, function(c) {
+      return d3.min(c.values, ramda.path('y'));
+    });
+    $scope.yMax = d3.max(newData, function(c) {
+      return d3.max(c.values, ramda.path('y'));
+    });
     var range = R.pick(['xMin', 'xMax', 'yMin', 'yMax'], $scope);
 
-    d.setData(newData, $scope.x, $scope.y, $scope.interpolate, range);
+    if ($scope.showSeriesDiagram) {
+      d.setData(newData, $scope.x, $scope.y, range);
+    }
 
     function label(d) {
       var params = ramda.pick(uniqueParams, d.params);
@@ -85,8 +97,9 @@ app.controller('DiagramCtrl', function($scope) {
     function filterByParams(d) {
       var filtered = true;
       Object.keys($scope.params).forEach(function(param) {
-        var v= JSON.stringify(d.params[param]);
-        filtered = filtered && ($scope.params[param].hide.indexOf(v) == -1);
+        var v = JSON.stringify(d.params[param]);
+        filtered = filtered && ($scope.params[param].hide.indexOf(v) ==
+          -1);
       });
       filtered = filtered && (d.headers.indexOf($scope.y) > -1);
       filtered = filtered && (d.headers.indexOf($scope.y) > -1);
@@ -97,9 +110,13 @@ app.controller('DiagramCtrl', function($scope) {
       var xAxis = valueFunc(d, $scope.x);
       var yAxis = valueFunc(d, $scope.y);
       var values = d.values
-      .slice(1*$scope.xFrom, 1*$scope.xFrom+1*$scope.xLen)
-      .map(function(d, i) {
-        return {x: xAxis(d, i), y: yAxis(d, i)}; });
+        .slice(1 * $scope.xFrom, 1 * $scope.xFrom + 1 * $scope.xLen)
+        .map(function(d, i) {
+          return {
+            x: xAxis(d, i),
+            y: yAxis(d, i)
+          };
+        });
       var yvalues = values.map(ramda.path('y')).sort();
       return {
         params: ramda.pick(uniqueParams, d.params),
@@ -119,13 +136,19 @@ app.controller('DiagramCtrl', function($scope) {
 
   function valueFunc(d, name) {
     if (name === 'n') {
-      return function(d, i) { return i; };
+      return function(d, i) {
+        return i;
+      };
     }
     var axis = d.headers.indexOf(name);
     if (axis == -1) {
-      return function(d, i) { return; };
+      return function(d, i) {
+        return;
+      };
     }
-    return function(d, i) { return d[axis]; };
+    return function(d, i) {
+      return d[axis];
+    };
   }
 
   function withHeaders(data, headers) {
@@ -154,8 +177,11 @@ app.controller('DiagramCtrl', function($scope) {
           return;
         }
         var newVal = JSON.stringify(d.params[param]);
-        if (! params[param]) {
-          params[param] = {values: [newVal], hide: [newVal]};
+        if (!params[param]) {
+          params[param] = {
+            values: [newVal],
+            hide: [newVal]
+          };
         } else if (params[param].values.indexOf(newVal) == -1) {
           params[param].values.push(newVal);
           params[param].hide.push(newVal);
