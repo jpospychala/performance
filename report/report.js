@@ -2,15 +2,18 @@ var app = angular.module('app', []);
 app.controller('DiagramCtrl', function($scope) {
   var ignoredParams = ['MemTotal', 'bogomips', 'cpu cores', 'model name'];
   $scope.funcs = [
-    {name: "min", label: "min", selected: false},
-    {name: "max", label: "max", selected: false},
-    {name: "avg", label: "avg", selected: false},
-    {name: "q1", label: "0.25-quantile", selected: false},
-    {name: "q2", label: "0.50-quantile", selected: false},
-    {name: "q3", label: "0.75-quantile", selected: false},
-    {name: "q9", label: "0.90-quantile", selected: false},
-    {name: "q99", label: "0.99-quantile", selected: false}
+    {name: "min", label: "min", selected: false, fn: function(y) {return d3.min(y); }},
+    {name: "max", label: "max", selected: false, fn: function(y) {return d3.max(y); }},
+    {name: "avg", label: "avg", selected: false, fn: function(y) {return d3.mean(y).toFixed(4); }},
+    {name: "q1", label: "0.25-quantile", selected: false, fn: function(y) {return d3.quantile(y, 0.25); }},
+    {name: "q2", label: "0.50-quantile", selected: false, fn: function(y) {return d3.quantile(y, 0.5); }},
+    {name: "q3", label: "0.75-quantile", selected: false, fn: function(y) {return d3.quantile(y, 0.75); }},
+    {name: "q9", label: "0.90-quantile", selected: false, fn: function(y) {return d3.quantile(y, 0.9).toFixed(4); }},
+    {name: "q99", label: "0.99-quantile", selected: false, fn: function(y) {return d3.quantile(y, 0.99).toFixed(4); }},
+    {name: "total", label: "total", selected: false, fn: function(y,d) {return d.max-d.min;}},
+    {name: "speed", label: "speed", selected: false, fn: function(y,d) {return d.total/y.length;}}
   ];
+
   $scope.statisticFuncsSelected = {};
   $scope.params = {};
   $scope.showSeriesDiagram = false;
@@ -167,20 +170,16 @@ app.controller('DiagramCtrl', function($scope) {
             y: yAxis(d, i)
           };
         });
-      var yvalues = values.map(ramda.path('y')).sort();
-      return {
+      var ret = {
         params: d.params,
         name: label(d),
-        min: d3.min(yvalues),
-        max: d3.max(yvalues),
-        avg: d3.mean(yvalues).toFixed(4),
-        q1: d3.quantile(yvalues, 0.25),
-        q2: d3.quantile(yvalues, 0.5),
-        q3: d3.quantile(yvalues, 0.75),
-        q9: d3.quantile(yvalues, 0.9).toFixed(4),
-        q99: d3.quantile(yvalues, 0.99).toFixed(4),
         values: values
       };
+      var yvalues = values.map(ramda.path('y')).sort();
+      $scope.funcs.forEach(function(f) {
+        ret[f.name] = f.fn(yvalues, ret);
+      });
+      return ret;
     }
   }
 

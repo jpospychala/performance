@@ -108,26 +108,11 @@
     <table border="1">
       <tr>
         <td ng-repeat="(param, values) in params">{{param}}</td>
-        <td>Min</td>
-        <td>Max</td>
-        <td>0.25-quantile</td>
-        <td>0.5-quantile</td>
-        <td>0.75-quantile</td>
-        <td>0.90-quantile</td>
-        <td>0.99-quantile</td>
-        <td>Avg</td>
+        <td ng-repeat="f in funcs">{{f.label}}</td>
       </tr>
       <tr ng-repeat="serie in series">
         <td ng-repeat="(param, values) in params">{{serie.params[param]}}</td>
-        <td>{{serie.min}}</td>
-        <td>{{serie.max}}</td>
-        <td>{{serie.q1}}</td>
-        <td>{{serie.q2}}</td>
-        <td>{{serie.q3}}</td>
-        <td>{{serie.q9}}</td>
-        <td>{{serie.q99}}</td>
-        <td>{{serie.avg}}</td>
-
+        <td ng-repeat="f in funcs">{{serie[f.name]}}</td>
       </tr>
     </table>
   </div>
