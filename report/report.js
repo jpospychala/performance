@@ -1,8 +1,20 @@
 var app = angular.module('app', []);
 app.controller('DiagramCtrl', function($scope) {
   var ignoredParams = ['MemTotal', 'bogomips', 'cpu cores', 'model name'];
+  $scope.funcs = [
+    {name: "min", label: "min", selected: false},
+    {name: "max", label: "max", selected: false},
+    {name: "avg", label: "avg", selected: false},
+    {name: "q1", label: "0.25-quantile", selected: false},
+    {name: "q2", label: "0.50-quantile", selected: false},
+    {name: "q3", label: "0.75-quantile", selected: false},
+    {name: "q9", label: "0.90-quantile", selected: false},
+    {name: "q99", label: "0.99-quantile", selected: false}
+  ];
+  $scope.statisticFuncsSelected = {};
   $scope.params = {};
   $scope.showSeriesDiagram = false;
+  $scope.showAggregateDiagram = true;
   $scope.showSummaryTable = true;
   $scope.xFrom = $scope.xFrom || 0;
   $scope.xLen = $scope.xLen || 1000;
@@ -12,7 +24,8 @@ app.controller('DiagramCtrl', function($scope) {
   $scope.$watch('xFrom', setData);
   $scope.$watch('xLen', setData);
 
-  var d = new Diagram();
+  var d = new Diagram("#seriesDiagram");
+  var d2 = new Diagram("#aggrDiagram");
   d3.json("result.json", function(error, data) {
     if (error) {
       console.warn(error);
@@ -83,14 +96,51 @@ app.controller('DiagramCtrl', function($scope) {
     $scope.yMax = d3.max(newData, function(c) {
       return d3.max(c.values, ramda.path('y'));
     });
-    var range = R.pick(['xMin', 'xMax', 'yMin', 'yMax'], $scope);
 
     if ($scope.showSeriesDiagram) {
-      d.setData(newData, $scope.x, $scope.y, range);
+      d.setData(newData, $scope.x, $scope.y);
+    }
+
+    if ($scope.showAggregateDiagram) {
+      $scope.seriesByFunc = calculateSeriesByFunc(newData);
+      d2.setData($scope.seriesByFunc, $scope.groupBy, $scope.y);
+    }
+
+    function calculateSeriesByFunc(data) {
+      var out = {};
+      data
+      .forEach(function(d) {
+        $scope.funcs
+        .filter(R.path('selected'))
+        .forEach(function(f) {
+          var significantParams = R.pick(R.keys($scope.params), d.params);
+          var serie = {
+            params: R.mixin(R.omit([$scope.groupBy], significantParams), {func:f.label}),
+            values: []
+          };
+          var name = hash(serie);
+          serie.name = name;
+          if (!out[name]) {
+            out[name] = serie;
+          }
+          out[name].values.push({
+            x: d.params[$scope.groupBy],
+            y: d[f.name]
+          });
+        });
+      });
+      return R.values(out).map(function(d) {
+        d.values = R.sort(function (a, b) {return a.x - b.x}, d.values);
+        return d;
+      });
     }
 
     function label(d) {
       var params = ramda.pick(uniqueParams, d.params);
+      return hash(params);
+    }
+
+    function hash(params) {
       return (JSON.stringify(params)).replace(/[^ a-zA-Z0-9:,]/g, '');
     }
 
@@ -119,7 +169,7 @@ app.controller('DiagramCtrl', function($scope) {
         });
       var yvalues = values.map(ramda.path('y')).sort();
       return {
-        params: ramda.pick(uniqueParams, d.params),
+        params: d.params,
         name: label(d),
         min: d3.min(yvalues),
         max: d3.max(yvalues),

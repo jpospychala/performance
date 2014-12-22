@@ -63,13 +63,34 @@
     </table>
     <div class="large-12 columns">
       <input id="checkbox1" type="checkbox" ng-model="showSeriesDiagram"><label for="checkbox1">Series diagram</label>
-      <input id="checkbox2" type="checkbox" ng-model="showCorrelationDiagram"><label for="checkbox2">Corelation diagram</label>
-      <input id="checkbox3" type="checkbox" ng-model="showSummaryTable"><label for="checkbox2">Summary table</label>
+      <input id="checkbox2" type="checkbox" ng-model="showAggregateDiagram"><label for="checkbox2">Aggregate diagram</label>
+      <input id="checkbox3" type="checkbox" ng-model="showSummaryTable"><label for="checkbox2">Summary</label>
     </div>
   </div>
 
-  <div ng-show="showCorrelationDiagram">
-    Not available yet
+  <div ng-show="showAggregateDiagram">
+    <div class="large-12 columns">
+      Group by:
+      <span ng-repeat="(param, values) in params">
+        <input type="radio" ng-model="$parent.groupBy" ng-value="param"> {{param}}
+      </span>
+    </div>
+    <div class="large-12 columns">
+      Function:
+      <span ng-repeat="f in funcs">
+        <input type="checkbox" ng-model="f.selected" ng-value="f.name"> {{f.label}}
+      </span>
+    </div>
+    <table border="1">
+      <tr>
+        <td ng-repeat="(param, values) in params">{{param}}</td>
+      </tr>
+      <tr ng-repeat="(hash, serie) in seriesByFunc">
+        <td ng-repeat="(param, values) in params">{{serie.params[param]}}</td>
+        <td ng-repeat="o in serie.values">{{o.x}}, {{o.y}}</td>
+      </tr>
+    </table>
+    <div id="aggrDiagram"></div>
   </div>
 
   <div ng-show="showSeriesDiagram">
@@ -80,7 +101,7 @@
       </span>
     </div>
 
-    <div id="diagram"></div>
+    <div id="seriesDiagram"></div>
   </div>
 
   <div id="summary_table" ng-show="showSummaryTable">

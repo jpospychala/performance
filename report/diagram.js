@@ -1,4 +1,4 @@
-function Diagram() {
+function Diagram(selector) {
   var self = this;
   self.interpolate = 'linear';
 
@@ -27,17 +27,16 @@ function Diagram() {
     .scale(y)
     .orient("left");
 
-  var svg = d3.select("#diagram").append("svg")
+  var svg = d3.select(selector).append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  self.setData = function(data, xName, yName, range) {
+  self.setData = function(data, xName, yName) {
     self.data = data;
     self.xName = xName;
     self.yName = yName;
-    self.range = range;
     self.draw();
   }
 
@@ -75,7 +74,14 @@ function Diagram() {
         return d3.max(c.values, ramda.path('x'));
       })
     ]);
-    y.domain([self.range.yMin, self.range.yMax]);
+    y.domain([
+      d3.min(series, function(c) {
+        return d3.min(c.values, ramda.path('y'));
+      }),
+      d3.max(series, function(c) {
+        return d3.max(c.values, ramda.path('y'));
+      })
+    ]);
 
     svg.selectAll("*").remove();
     svg.append("g")
