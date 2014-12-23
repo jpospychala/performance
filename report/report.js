@@ -11,7 +11,7 @@ app.controller('DiagramCtrl', function($scope) {
     {name: "q9", label: "0.90-quantile", selected: false, fn: function(y) {return d3.quantile(y, 0.9).toFixed(4); }},
     {name: "q99", label: "0.99-quantile", selected: false, fn: function(y) {return d3.quantile(y, 0.99).toFixed(4); }},
     {name: "total", label: "total", selected: false, fn: function(y,d) {return d.max-d.min;}},
-    {name: "speed", label: "speed", selected: false, fn: function(y,d) {return d.total/y.length;}}
+    {name: "throughput", label: "throughput", selected: false, fn: function(y,d) {return y.length/d.total;}}
   ];
 
   $scope.statisticFuncsSelected = {};
