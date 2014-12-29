@@ -67,7 +67,10 @@ app.controller('DiagramCtrl', function($scope) {
     if ($scope.params) {
       Object.keys($scope.params).forEach(function(param) {
         if (newParams[param]) {
-          newParams[param] = $scope.params[param];
+          var sameAsCurrent = R.intersection(newParams[param].values, $scope.params[param].values);
+          if (sameAsCurrent.length == newParams[param].values.length) {
+            newParams[param].hide = $scope.params[param].hide;
+          }
         }
       });
     }
