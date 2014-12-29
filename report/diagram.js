@@ -119,6 +119,16 @@ function Diagram(selector) {
         return color(d.name);
       });
 
+      series.forEach(function(s) {
+        svg.selectAll("dot")
+        .data(s.values)
+        .enter().append("circle")
+        .attr("r", 3.5)
+        .attr("cx", function(d) { return x(d.x); })
+        .attr("cy", function(d) { return y(d.y); })
+        .style("fill", function(d) { return color(s.name); });
+      });
+
     serie.append("text")
       .attr("class", "legend")
       .attr("x", width + 10)
