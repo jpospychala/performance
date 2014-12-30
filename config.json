@@ -10,15 +10,15 @@
     "after": ["docker", "stop", "rabbit_docker"],
     "options": {
       "n": [1],
-      "msgsToSend": [1000],
+      "msgsToSend": [10000],
       "msgSendDelay": [0, 10, 50, 100],
       "msgAckDelay": [0],
-      "deliveryMode": [1],
+      "deliveryMode": [1, 2],
       "queue": ["q2"],
-      "queueDurable": [false],
-      "autoAck": [true],
-      "prefetchCount": [0],
-      "msgSize": [13, 26]
+      "queueDurable": [false, true],
+      "autoAck": [true, false],
+      "prefetchCount": [0, 1],
+      "msgSize": [13, 26, 512, 1024, 2048, 4096]
     }
   },
   "rabbits_latency_java": {
@@ -33,15 +33,15 @@
     "after": ["docker", "stop", "rabbit_docker"],
     "options": {
       "n": [1],
-      "msgsToSend": [1000],
+      "msgsToSend": [10000],
       "msgSendDelay": [0, 10, 50, 100],
       "msgAckDelay": [0],
-      "deliveryMode": [1],
+      "deliveryMode": [1, 2],
       "queue": ["q2"],
-      "queueDurable": [false],
-      "autoAck": [true],
-      "prefetchCount": [0],
-      "msgSize": [13, 26]
+      "queueDurable": [false, true],
+      "autoAck": [true, false],
+      "prefetchCount": [0, 1],
+      "msgSize": [13, 26, 512, 1024, 2048, 4096]
     }
   },
   "zeromq_latency": {
@@ -60,7 +60,7 @@
       "queueDurable": [false],
       "autoAck": [true],
       "prefetchCount": [0],
-      "msgSize": [13, 26]
+      "msgSize": [13, 26, 512, 1024, 2048, 4096]
     }
   },
   "sleep_node": {
