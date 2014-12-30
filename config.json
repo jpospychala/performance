@@ -24,7 +24,7 @@
   "rabbits_latency_java": {
     "workdir": "./rabbit/java",
     "params_style": "key_value",
-    "build": ["mvn", "clean", "install"],
+    "build": ["make", "rabbit_docker_image", "mvncleaninstall"],
     "tasks": {
       "producer": ["java", "-cp", "target/deps/amqp-client-3.3.5.jar:target/rabbits-0.0.1-SNAPSHOT.jar", "Producer"],
       "consumer": ["java", "-cp", "target/deps/amqp-client-3.3.5.jar:target/rabbits-0.0.1-SNAPSHOT.jar", "Consumer"]
