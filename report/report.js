@@ -10,8 +10,7 @@ app.controller('DiagramCtrl', function($scope) {
     {name: "q3", label: "0.75-quantile", selected: false, fn: function(y) {return d3.quantile(y, 0.75); }},
     {name: "q9", label: "0.90-quantile", selected: false, fn: function(y) {return d3.quantile(y, 0.9).toFixed(4); }},
     {name: "q99", label: "0.99-quantile", selected: false, fn: function(y) {return d3.quantile(y, 0.99).toFixed(4); }},
-    {name: "total", label: "total", selected: false, fn: function(y,d) {return d.max-d.min;}},
-    {name: "throughput", label: "throughput", selected: false, fn: function(y,d) {return y.length/d.total;}}
+    {name: "throughput", label: "count/(max-min)", selected: false, fn: function(y,d) {return (y.length/(d.max-d.min)).toFixed(4);}}
   ];
 
   $scope.statisticFuncsSelected = {};

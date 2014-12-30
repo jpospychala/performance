@@ -64,7 +64,7 @@
     <div class="large-12 columns">
       <input id="checkbox1" type="checkbox" ng-model="showSeriesDiagram"><label for="checkbox1">Series diagram</label>
       <input id="checkbox2" type="checkbox" ng-model="showAggregateDiagram"><label for="checkbox2">Aggregate diagram</label>
-      <input id="checkbox3" type="checkbox" ng-model="showSummaryTable"><label for="checkbox2">Summary</label>
+      <input id="checkbox3" type="checkbox" ng-model="showSummaryTable"><label for="checkbox3">Summary</label>
     </div>
   </div>
 
@@ -81,7 +81,8 @@
         <input type="checkbox" ng-model="f.selected" ng-value="f.name"> {{f.label}}
       </span>
     </div>
-    <table border="1">
+    <input id="checkbox4" type="checkbox" ng-model="showAggregateTable"><label for="checkbox4">Data table</label>
+    <table border="1" ng-show="showAggregateTable">
       <tr>
         <td ng-repeat="(param, values) in params">{{param}}</td>
       </tr>
