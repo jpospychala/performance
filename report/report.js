@@ -28,7 +28,9 @@ app.controller('DiagramCtrl', function($scope) {
   $scope.$watch('xLen', setData);
 
   var d = new Diagram("#seriesDiagram");
+  d.drawDots = false;
   var d2 = new Diagram("#aggrDiagram");
+  d2.drawLine = false;
   d3.json("result.json", function(error, data) {
     if (error) {
       console.warn(error);

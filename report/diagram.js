@@ -1,6 +1,8 @@
 function Diagram(selector) {
   var self = this;
   self.interpolate = 'linear';
+  self.drawLine = true;
+  self.drawDots = true;
 
   var margin = {
       top: 20,
@@ -110,15 +112,18 @@ function Diagram(selector) {
       .enter().append("g")
       .attr("class", "serie");
 
-    serie.append("path")
-      .attr("class", "line")
-      .attr("d", function(d) {
-        return line(d.values);
-      })
-      .style("stroke", function(d) {
-        return color(d.name);
-      });
+    if (self.drawLine) {
+      serie.append("path")
+        .attr("class", "line")
+        .attr("d", function(d) {
+          return line(d.values);
+        })
+        .style("stroke", function(d) {
+          return color(d.name);
+        });
+    }
 
+    if (self.drawDots) {
       series.forEach(function(s) {
         svg.selectAll("dot")
         .data(s.values)
@@ -128,6 +133,7 @@ function Diagram(selector) {
         .attr("cy", function(d) { return y(d.y); })
         .style("fill", function(d) { return color(s.name); });
       });
+    }
 
     serie.append("text")
       .attr("class", "legend")
