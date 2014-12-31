@@ -99,6 +99,7 @@ def process(configFile, configName, runreport, verbose, dryRun, doBuild, instanc
           continue
 
       print '{0}/{1} executing {3} {2}'.format(i, n, id, json.dumps(variant["config"]))
+      sys.stdout.flush()
 
       if dryRun:
         continue
