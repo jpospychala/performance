@@ -68,6 +68,11 @@ case "$1" in
   fi
   ;;
 
+  "ssh")
+  GET_DROPLET
+  ssh -oStrictHostKeyChecking=no "root@$IP"
+  ;;
+
   "stop")
   GET_DROPLET
   $CURL -X DELETE "$DOHOME/droplets/$ID"
