@@ -56,7 +56,7 @@ case "$1" in
 
   # execute
   ssh -oStrictHostKeyChecking=no "root@$IP" 'bash -s' < run.sh
-  scp -oStrictHostKeyChecking=no "root@$IP:/root/performance/report/result.json" $ID.json
+  scp -r -oStrictHostKeyChecking=no "root@$IP:/root/performance/result" $ID
   ;;
 
   "status")

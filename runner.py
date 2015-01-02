@@ -45,7 +45,7 @@ def main(argv):
     configFile = json.load(f)
 
   try:
-    with open('report/result.json', 'r') as f:
+    with open('result/index.json', 'r') as f:
       report = json.load(f)
   except:
     report = []
@@ -106,13 +106,12 @@ def process(configFile, configName, runreport, verbose, dryRun, doBuild, instanc
 
       logpaths = run(variant, id, verbose)
       for task, path in logpaths.items():
-        headers, values = readLog(path)
         params = variant["config"].copy()
         params.update({"task": task})
-        runreport.append({"id": id, "params": params, "headers": headers, "values": values})
+        runreport.append({"id": id, "params": params})
 
         # update report file continuously
-        with open('report/result.json', 'w') as f:
+        with open('result/index.json', 'w') as f:
           json.dump(runreport, f)
 
     if not dryRun and "before" in config:
