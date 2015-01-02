@@ -1,5 +1,4 @@
-var app = angular.module('app', []);
-app.controller('DiagramCtrl', function($scope) {
+app.controller('DiagramCtrl', function($scope, dataService) {
   var ignoredParams = ['MemTotal', 'bogomips', 'cpu cores', 'model name'];
   $scope.funcs = [
     {name: "min", label: "min", selected: false, fn: function(y) {return d3.min(y); }},
@@ -22,7 +21,6 @@ app.controller('DiagramCtrl', function($scope) {
   $scope.xLen = $scope.xLen || 1000;
   $scope.$watch('x', setData);
   $scope.$watch('y', switchHeader);
-  $scope.$watch('interpolate', setData);
   $scope.$watch('xFrom', setData);
   $scope.$watch('xLen', setData);
 
@@ -30,19 +28,28 @@ app.controller('DiagramCtrl', function($scope) {
   d.drawDots = false;
   var d2 = new Diagram("#aggrDiagram");
   d2.drawLine = false;
-  d3.json("result.json", function(error, data) {
-    if (error) {
-      console.warn(error);
-    }
-    data = data.filter(function(d) {
-      return d.values.length > 0;
-    });
-    $scope.raw = data;
-    $scope.headers = findHeaders(data);
+
+  dataService.init().then(function(data) {
+    $scope.headers = dataService.getHeaders(data);
     $scope.x = $scope.headers[0];
     $scope.y = $scope.headers[1];
-    $scope.$apply();
   });
+
+  function switchHeader() {
+    $scope.data = dataService.withHeaders($scope.y);
+    var newParams = findParams($scope.data);
+    if ($scope.params) {
+      Object.keys($scope.params).forEach(function(param) {
+        if (newParams[param]) {
+          var sameAsCurrent = R.intersection(newParams[param].values, $scope.params[param].values);
+          if (sameAsCurrent.length == newParams[param].values.length) {
+            newParams[param].hide = $scope.params[param].hide;
+          }
+        }
+      });
+    }
+    $scope.params = newParams;
+  }
 
   $scope.toggle = function(param, values) {
     var idx = values.indexOf(param);
@@ -60,22 +67,6 @@ app.controller('DiagramCtrl', function($scope) {
       values.splice(0, values.length);
     }
     setData();
-  }
-
-  function switchHeader() {
-    $scope.data = withHeaders($scope.raw, [$scope.y]);
-    var newParams = findParams($scope.data);
-    if ($scope.params) {
-      Object.keys($scope.params).forEach(function(param) {
-        if (newParams[param]) {
-          var sameAsCurrent = R.intersection(newParams[param].values, $scope.params[param].values);
-          if (sameAsCurrent.length == newParams[param].values.length) {
-            newParams[param].hide = $scope.params[param].hide;
-          }
-        }
-      });
-    }
-    $scope.params = newParams;
   }
 
   function setData() {
@@ -96,12 +87,6 @@ app.controller('DiagramCtrl', function($scope) {
     });
     $scope.xMax = d3.max(newData, function(c) {
       return d3.max(c.values, ramda.path('x'));
-    });
-    $scope.yMin = d3.min(newData, function(c) {
-      return d3.min(c.values, ramda.path('y'));
-    });
-    $scope.yMax = d3.max(newData, function(c) {
-      return d3.max(c.values, ramda.path('y'));
     });
 
     if ($scope.showSeriesDiagram) {
@@ -202,24 +187,6 @@ app.controller('DiagramCtrl', function($scope) {
     return function(d, i) {
       return d[axis];
     };
-  }
-
-  function withHeaders(data, headers) {
-    return ramda.filter(function(d) {
-      return ramda.intersection(d.headers, headers).length > 0;
-    }, data);
-  }
-
-  function findHeaders(data) {
-    var headers = ['n'];
-    data.forEach(function(d) {
-      d.headers.forEach(function(header) {
-        if (headers.indexOf(header) == -1) {
-          headers.push(header);
-        }
-      });
-    });
-    return headers;
   }
 
   function findParams(data) {
