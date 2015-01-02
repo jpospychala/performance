@@ -3,7 +3,7 @@ app.controller('DiagramCtrl', function($scope, dataService) {
   $scope.funcs = [
     {name: "min", label: "min", selected: false, fn: function(y) {return d3.min(y); }},
     {name: "max", label: "max", selected: false, fn: function(y) {return d3.max(y); }},
-    {name: "avg", label: "avg", selected: false, fn: function(y) {return d3.mean(y).toFixed(4); }},
+    {name: "mean", label: "mean", selected: false, fn: function(y) {return d3.mean(y).toFixed(4); }},
     {name: "q1", label: "0.25-quantile", selected: false, fn: function(y) {return d3.quantile(y, 0.25); }},
     {name: "q2", label: "0.50-quantile", selected: false, fn: function(y) {return d3.quantile(y, 0.5); }},
     {name: "q3", label: "0.75-quantile", selected: false, fn: function(y) {return d3.quantile(y, 0.75); }},
