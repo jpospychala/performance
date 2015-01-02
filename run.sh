@@ -11,8 +11,15 @@ echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-se
 apt-get -y install oracle-java8-installer
 apt-get -y install maven2
 ln -s /usr/bin/nodejs /usr/bin/node
-git clone https://github.com/jpospychala/performance.git
-cd performance
+
+if [ -e performance ]; then
+  cd performance
+  git pull --rebase
+else
+  git clone https://github.com/jpospychala/performance.git
+  cd performance
+fi
+
 npm install
 
 ./runner.py -b
