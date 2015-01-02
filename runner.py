@@ -45,7 +45,7 @@ def main(argv):
     configFile = json.load(f)
 
   try:
-    with open('result/index.json', 'r') as f:
+    with open('results/index.json', 'r') as f:
       report = json.load(f)
   except:
     report = []
@@ -111,7 +111,7 @@ def process(configFile, configName, runreport, verbose, dryRun, doBuild, instanc
         runreport.append({"id": id, "params": params})
 
         # update report file continuously
-        with open('result/index.json', 'w') as f:
+        with open('results/index.json', 'w') as f:
           json.dump(runreport, f)
 
     if not dryRun and "before" in config:
