@@ -118,20 +118,6 @@ def process(configFile, configName, runreport, verbose, dryRun, doBuild, instanc
       subprocess.call(config["before"], cwd=config.get("workdir"))
 
 
-def readLog(path):
-  headers = []
-  values = []
-  with open(path, 'r') as f:
-    first = True
-    for line in f:
-      if first:
-        headers = line.strip().split(',')
-        first = False
-      else:
-        values.append([int(x) for x in line.split(',')])
-  return headers, values
-
-
 def run(config, id, verbose):
   logdir = 'results/'+id+'/'
   processes = []
