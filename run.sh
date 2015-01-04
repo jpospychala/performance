@@ -23,3 +23,4 @@ fi
 npm install
 
 ./runner.py -b
+tar czvf results.tar.gz results
