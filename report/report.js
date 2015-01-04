@@ -1,15 +1,15 @@
 app.controller('DiagramCtrl', function($scope, dataService) {
   var ignoredParams = ['MemTotal', 'bogomips', 'cpu cores', 'model name'];
   $scope.funcs = [
-    {name: "min", label: "min", selected: false, fn: function(y) {return d3.min(y); }},
-    {name: "max", label: "max", selected: false, fn: function(y) {return d3.max(y); }},
-    {name: "mean", label: "mean", selected: false, fn: function(y) {return d3.mean(y).toFixed(4); }},
-    {name: "q1", label: "0.25-quantile", selected: false, fn: function(y) {return d3.quantile(y, 0.25); }},
-    {name: "q2", label: "0.50-quantile", selected: false, fn: function(y) {return d3.quantile(y, 0.5); }},
-    {name: "q3", label: "0.75-quantile", selected: false, fn: function(y) {return d3.quantile(y, 0.75); }},
-    {name: "q9", label: "0.90-quantile", selected: false, fn: function(y) {return d3.quantile(y, 0.9).toFixed(4); }},
-    {name: "q99", label: "0.99-quantile", selected: false, fn: function(y) {return d3.quantile(y, 0.99).toFixed(4); }},
-    {name: "throughput", label: "count/(max-min)", selected: false, fn: function(y,d) {return (y.length/(d.max-d.min)).toFixed(4);}}
+    {name: "min", label: "min", selected: false },
+    {name: "max", label: "max", selected: false },
+    {name: "mean", label: "mean", selected: false },
+    {name: "q1", label: "0.25-quantile", selected: false },
+    {name: "q2", label: "0.50-quantile", selected: false },
+    {name: "q3", label: "0.75-quantile", selected: false },
+    {name: "q9", label: "0.90-quantile", selected: false },
+    {name: "q99", label: "0.99-quantile", selected: false },
+    {name: "throughput", label: "count/(max-min)", selected: false }
   ];
 
   $scope.statisticFuncsSelected = {};
@@ -82,12 +82,6 @@ app.controller('DiagramCtrl', function($scope, dataService) {
       .map(transformToSeries);
 
     $scope.series = newData;
-    $scope.xMin = d3.min(newData, function(c) {
-      return d3.min(c.values, ramda.path('x'));
-    });
-    $scope.xMax = d3.max(newData, function(c) {
-      return d3.max(c.values, ramda.path('x'));
-    });
 
     if ($scope.showSeriesDiagram) {
       d.setData(newData, $scope.x, $scope.y);
@@ -149,25 +143,28 @@ app.controller('DiagramCtrl', function($scope, dataService) {
     }
 
     function transformToSeries(d) {
-      var xAxis = valueFunc(d, $scope.x);
-      var yAxis = valueFunc(d, $scope.y);
-      var values = d.values
-        .slice(1 * $scope.xFrom, 1 * $scope.xFrom + 1 * $scope.xLen)
-        .map(function(d, i) {
-          return {
-            x: xAxis(d, i),
-            y: yAxis(d, i)
-          };
-        });
       var ret = {
         params: d.params,
-        name: label(d),
-        values: values
+        name: label(d)
       };
-      var yvalues = values.map(ramda.path('y')).sort();
-      $scope.funcs.forEach(function(f) {
-        ret[f.name] = f.fn(yvalues, ret);
-      });
+
+      //var xAxis = valueFunc(d, $scope.x);
+      //var yAxis = valueFunc(d, $scope.y);
+      //var values = d.values
+      //  .slice(1 * $scope.xFrom, 1 * $scope.xFrom + 1 * $scope.xLen)
+      //  .map(function(d, i) {
+      //    return {
+      //      x: xAxis(d, i),
+      //      y: yAxis(d, i)
+      //    };
+      //  });
+
+      var headerN = d.headers.indexOf($scope.y);
+      if (headerN > -1) {
+        $scope.funcs.forEach(function(f) {
+          ret[f.name] = d.stats[headerN][f.name];
+        });
+      }
       return ret;
     }
   }

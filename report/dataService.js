@@ -13,10 +13,7 @@ app.service('dataService', function($q) {
           return;
         }
 
-        self.data = data.filter(function(d) {
-          return d.values.length > 0;
-        });
-
+        self.data = data;
         deferred.resolve(self.data);
       });
 
