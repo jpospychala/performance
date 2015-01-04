@@ -1,5 +1,4 @@
 app.controller('DiagramCtrl', function($scope, dataService) {
-  var ignoredParams = ['MemTotal', 'bogomips', 'cpu cores', 'model name'];
   $scope.funcs = [
     {name: "min", label: "min", selected: false },
     {name: "max", label: "max", selected: false },
@@ -36,8 +35,7 @@ app.controller('DiagramCtrl', function($scope, dataService) {
   });
 
   function switchHeader() {
-    $scope.data = dataService.withHeaders($scope.y);
-    var newParams = findParams($scope.data);
+    var newParams = dataService.getParamsForHeader($scope.y);
     if ($scope.params) {
       Object.keys($scope.params).forEach(function(param) {
         if (newParams[param]) {
@@ -70,15 +68,12 @@ app.controller('DiagramCtrl', function($scope, dataService) {
   }
 
   function setData() {
-    if (!$scope.data) {
-      return;
-    }
     var uniqueParams = Object.keys($scope.params).filter(function(param) {
       return $scope.params[param].values.length - $scope.params[param]
         .hide.length > 1;
     });
 
-    var newData = $scope.data.filter(filterByParams)
+    var newData = dataService.dataForParams($scope.params, $scope.y)
       .map(transformToSeries);
 
     $scope.series = newData;
@@ -130,17 +125,6 @@ app.controller('DiagramCtrl', function($scope, dataService) {
       return (JSON.stringify(params)).replace(/[^ a-zA-Z0-9:,]/g, '');
     }
 
-    function filterByParams(d) {
-      var filtered = true;
-      Object.keys($scope.params).forEach(function(param) {
-        var v = JSON.stringify(d.params[param]);
-        filtered = filtered && ($scope.params[param].hide.indexOf(v) ==
-          -1);
-      });
-      filtered = filtered && (d.headers.indexOf($scope.y) > -1);
-      filtered = filtered && (d.headers.indexOf($scope.y) > -1);
-      return filtered;
-    }
 
     function transformToSeries(d) {
       var ret = {
@@ -185,31 +169,4 @@ app.controller('DiagramCtrl', function($scope, dataService) {
       return d[axis];
     };
   }
-
-  function findParams(data) {
-    var params = {};
-    data.forEach(function(d) {
-      Object.keys(d.params).forEach(function(param) {
-        if (ignoredParams.indexOf(param) > -1) {
-          return;
-        }
-        var newVal = JSON.stringify(d.params[param]);
-        if (!params[param]) {
-          params[param] = {
-            values: [newVal],
-            hide: [newVal]
-          };
-        } else if (params[param].values.indexOf(newVal) == -1) {
-          params[param].values.push(newVal);
-          params[param].hide.push(newVal);
-        }
-      });
-    });
-    Object.keys(params).forEach(function(param) {
-      if (params[param].values.length <= 1) {
-        delete params[param];
-      }
-    });
-    return params;
-  };
 });
