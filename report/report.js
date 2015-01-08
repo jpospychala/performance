@@ -26,7 +26,6 @@ app.controller('DiagramCtrl', function($scope, dataService) {
   var d = new Diagram("#seriesDiagram");
   d.drawDots = false;
   var d2 = new Diagram("#aggrDiagram");
-  d2.drawLine = false;
 
   dataService.init().then(function(data) {
     $scope.headers = dataService.getHeaders(data);
@@ -94,12 +93,12 @@ app.controller('DiagramCtrl', function($scope, dataService) {
         $scope.funcs
         .filter(R.path('selected'))
         .forEach(function(f) {
-          var significantParams = R.pick(R.keys($scope.params), d.params);
+          var significantParams = R.mixin(R.pick(uniqueParams, R.omit([$scope.groupBy], d.params)), {func:f.label});
           var serie = {
-            params: R.mixin(R.omit([$scope.groupBy], significantParams), {func:f.label}),
+            params: significantParams,
             values: []
           };
-          var name = hash(serie);
+          var name = hash(serie.params);
           serie.name = name;
           if (!out[name]) {
             out[name] = serie;
@@ -117,7 +116,7 @@ app.controller('DiagramCtrl', function($scope, dataService) {
     }
 
     function label(d) {
-      var params = ramda.pick(uniqueParams, d.params);
+      var params = R.pick(uniqueParams, d.params);
       return hash(params);
     }
 

@@ -85,10 +85,10 @@
     <input id="checkbox4" type="checkbox" ng-model="showAggregateTable"><label for="checkbox4">Data table</label>
     <table border="1" ng-show="showAggregateTable">
       <tr>
-        <td ng-repeat="(param, values) in params">{{param}}</td>
+        <td>Label</td>
       </tr>
       <tr ng-repeat="(hash, serie) in seriesByFunc">
-        <td ng-repeat="(param, values) in params">{{serie.params[param]}}</td>
+        <td>{{serie.name}}</td>
         <td ng-repeat="o in serie.values">{{o.x}}, {{o.y}}</td>
       </tr>
     </table>
