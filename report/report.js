@@ -88,12 +88,15 @@ app.controller('DiagramCtrl', function($scope, dataService) {
 
     function calculateSeriesByFunc(data) {
       var out = {};
+      var funcs = $scope.funcs.filter(R.path('selected'));
       data
       .forEach(function(d) {
-        $scope.funcs
-        .filter(R.path('selected'))
+        funcs
         .forEach(function(f) {
-          var significantParams = R.mixin(R.pick(uniqueParams, R.omit([$scope.groupBy], d.params)), {func:f.label});
+          var significantParams = R.pick(uniqueParams, R.omit([$scope.groupBy], d.params));
+          if (funcs.length > 1) {
+            significantParams = R.mixin(significantParams, {func:f.label});
+          }
           var serie = {
             params: significantParams,
             values: []
