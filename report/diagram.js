@@ -7,11 +7,11 @@ function Diagram(selector) {
   var margin = {
       top: 20,
       right: 300,
-      bottom: 30,
+      bottom: 50,
       left: 50
     },
     width = 1260 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+    height = 550 - margin.top - margin.bottom;
 
   var x = d3.scale.linear()
     .range([0, width]);
@@ -91,7 +91,7 @@ function Diagram(selector) {
       .attr("transform", "translate(0," + height + ")")
       .call(xAxis)
       .append("text")
-      .attr("y", 21)
+      .attr("y", 31)
       .attr("dy", ".71em")
       .attr("x", (width + 50) / 2)
       .style("text-anchor", "end")
