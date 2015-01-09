@@ -18,7 +18,7 @@
       "queueDurable": [false, true],
       "autoAck": [true, false],
       "prefetchCount": [0, 1],
-      "msgSize": [13, 26, 512, 1024, 2048, 4096]
+      "msgSize": [13, 26, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
     }
   },
   "rabbits_latency_java": {
@@ -41,7 +41,7 @@
       "queueDurable": [false, true],
       "autoAck": [true, false],
       "prefetchCount": [0, 1],
-      "msgSize": [13, 26, 512, 1024, 2048, 4096]
+      "msgSize": [13, 26, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
     }
   },
   "zeromq_latency": {
@@ -60,7 +60,7 @@
       "queueDurable": [false],
       "autoAck": [true],
       "prefetchCount": [0],
-      "msgSize": [13, 26, 512, 1024, 2048, 4096]
+      "msgSize": [13, 26, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
     }
   },
   "sleep_node": {
