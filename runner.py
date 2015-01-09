@@ -150,7 +150,7 @@ def params(config):
 
 def createId(variant):
   idmd5 = md5.new()
-  idmd5.update(json.dumps(variant["config"]))
+  idmd5.update(json.dumps(variant["config"], sort_keys=True))
   return idmd5.hexdigest()
 
 
