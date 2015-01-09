@@ -22,5 +22,10 @@ fi
 
 npm install
 
+if [ -e ~/index.json ]; then
+  mkdir results
+  cp ~/index.json results/index.json
+fi
+
 ./runner.py -b
 tar czvf results.tar.gz results
