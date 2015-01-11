@@ -58,6 +58,35 @@ app.service('dataService', function($q) {
       });
     };
 
+    self.getAllValues = function(series, x, y) {
+      return $q.all(series.map(function(d) {
+        return self.getValues(d, x, y);
+      }));
+    }
+
+    self.getValues = function(d, x, y) {
+      var deferred = $q.defer();
+      var i = -1;
+      var xGet = valueFunc(x);
+      var yGet = valueFunc(y);
+      d3.csv('/results/'+d.id+'/'+d.params.task+'.log')
+      .row(function (row) {
+        i++;
+        return {x: xGet(row), y: +yGet(row) };
+        })
+      .get(function (error, rows) {
+        deferred.resolve(R.mixin(d, {values: rows}));
+      });
+
+      return deferred.promise;
+
+      function valueFunc(name) {
+        if (name === 'n') {
+          return function(d) { return i; };
+        }
+        return function(d) { return d[name]; };
+      };
+    };
 
     function withHeader (header) {
       return ramda.filter(function(d) {

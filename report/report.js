@@ -77,13 +77,16 @@ app.controller('DiagramCtrl', function($scope, dataService) {
 
     $scope.series = newData;
 
-    if ($scope.showSeriesDiagram) {
-      d.setData(newData, $scope.x, $scope.y);
-    }
-
     if ($scope.showAggregateDiagram) {
       $scope.seriesByFunc = calculateSeriesByFunc(newData);
       d2.setData($scope.seriesByFunc, $scope.groupBy, $scope.y);
+    }
+
+    if ($scope.showSeriesDiagram) {
+      dataService.getAllValues(newData, $scope.x, $scope.y)
+      .then(function(newData) {
+        d.setData(newData, $scope.x, $scope.y);
+      });
     }
 
     function calculateSeriesByFunc(data) {
@@ -127,23 +130,12 @@ app.controller('DiagramCtrl', function($scope, dataService) {
       return (JSON.stringify(params)).replace(/[^ a-zA-Z0-9:,]/g, '');
     }
 
-
     function transformToSeries(d) {
       var ret = {
+        id: d.id,
         params: d.params,
         name: label(d)
       };
-
-      //var xAxis = valueFunc(d, $scope.x);
-      //var yAxis = valueFunc(d, $scope.y);
-      //var values = d.values
-      //  .slice(1 * $scope.xFrom, 1 * $scope.xFrom + 1 * $scope.xLen)
-      //  .map(function(d, i) {
-      //    return {
-      //      x: xAxis(d, i),
-      //      y: yAxis(d, i)
-      //    };
-      //  });
 
       var headerN = d.headers.indexOf($scope.y);
       if (headerN > -1) {
@@ -153,22 +145,5 @@ app.controller('DiagramCtrl', function($scope, dataService) {
       }
       return ret;
     }
-  }
-
-  function valueFunc(d, name) {
-    if (name === 'n') {
-      return function(d, i) {
-        return i;
-      };
-    }
-    var axis = d.headers.indexOf(name);
-    if (axis == -1) {
-      return function(d, i) {
-        return;
-      };
-    }
-    return function(d, i) {
-      return d[axis];
-    };
   }
 });
