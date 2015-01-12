@@ -16,12 +16,9 @@ app.controller('DiagramCtrl', function($scope, dataService) {
   $scope.showSeriesDiagram = false;
   $scope.showAggregateDiagram = true;
   $scope.showSummaryTable = true;
-  $scope.xFrom = $scope.xFrom || 0;
-  $scope.xLen = $scope.xLen || 1000;
+
   $scope.$watch('x', setData);
   $scope.$watch('y', switchHeader);
-  $scope.$watch('xFrom', setData);
-  $scope.$watch('xLen', setData);
 
   var d = new Diagram("#seriesDiagram");
   d.drawDots = false;
