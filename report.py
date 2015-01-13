@@ -4,6 +4,7 @@ import json
 import sys
 import math
 import functools
+import numpy
 
 def main(srcdir):
     try:
@@ -51,6 +52,7 @@ def calculateStats(v):
     stats["min"] = v[0]
     stats["max"] = v[-1]
     stats["mean"] = sum(v)/len(v)
+    stats["stddev"] = numpy.std(v)
     stats["q1"] = percentile(v, 0.25)
     stats["q2"] = percentile(v, 0.50)
     stats["q3"] = percentile(v, 0.75)
@@ -58,7 +60,7 @@ def calculateStats(v):
     stats["q99"] = percentile(v, 0.99)
     d = (v[-1] - v[0])
     if d > 0:
-        stats["throughput"] = len(v)/d
+        stats["throughput"] = len(v)*1.0/d
     else:
         stats["throughput"] = 0
     return stats

@@ -3,6 +3,7 @@ app.controller('DiagramCtrl', function($scope, dataService) {
     {name: "min", label: "min", selected: false },
     {name: "max", label: "max", selected: false },
     {name: "mean", label: "mean", selected: false },
+    {name: "stddev", label: "stddev", selected: false },
     {name: "q1", label: "0.25-quantile", selected: false },
     {name: "q2", label: "0.50-quantile", selected: false },
     {name: "q3", label: "0.75-quantile", selected: false },
