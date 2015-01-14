@@ -18,9 +18,9 @@ function start() {
           return when.promise(function(resolve, reject, notify) {
             var start = Date.now();
 
-            var intervalObj = setInterval(function() {
+            var intervalObj = setIntOrNow(function() {
                 if (msgsToSend <= 0) {
-                  clearInterval(intervalObj);
+                  clearIntOrNow(intervalObj, config.msgSendDelay);
                   ch.close().then(resolve);
                   return;
                 }
@@ -36,3 +36,19 @@ function start() {
       })).ensure(function() { conn.close(); });;
     }).then(null, console.warn);
 };
+
+function setIntOrNow(fn, delay) {
+  if (delay == 0) {
+    return setImmediate(fn);
+  } else {
+    return setInterval(fn, delay);
+  }
+}
+
+function clearIntOrNow(intObj, delay) {
+  if (delay == 0) {
+    clearImmediate(intObj);
+  } else {
+    clearInterval(intObj);
+  }
+}
