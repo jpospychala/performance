@@ -1,5 +1,5 @@
 {
-  "rabbits_latency": {
+  "rabbitmq_nodejs": {
     "workdir": "rabbit",
     "tasks": {
       "consumer": ["node", "consumer.js"],
@@ -10,6 +10,8 @@
     "after": ["docker", "stop", "rabbit_docker"],
     "options": {
       "n": [1],
+      "producerThreads": [1],
+      "consumerThreads": [1],
       "msgsToSend": [10000],
       "msgSendDelay": [0, 1, 5, 10],
       "msgAckDelay": [0],
@@ -21,7 +23,7 @@
       "msgSize": [13, 26, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
     }
   },
-  "rabbits_latency_java": {
+  "rabbitmq_java": {
     "workdir": "./rabbit/java",
     "params_style": "key_value",
     "build": ["make", "rabbit_docker_image", "mvncleaninstall"],
@@ -33,6 +35,8 @@
     "after": ["docker", "stop", "rabbit_docker"],
     "options": {
       "n": [1],
+      "producerThreads": [1],
+      "consumerThreads": [1],
       "msgsToSend": [10000],
       "msgSendDelay": [0, 1, 5, 10],
       "msgAckDelay": [0],
@@ -44,7 +48,7 @@
       "msgSize": [13, 26, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
     }
   },
-  "zeromq_latency": {
+  "zeromq_nodejs": {
     "workdir": "zeromq/node",
     "tasks": {
       "consumer": ["node", "consumer.js"],
@@ -52,7 +56,7 @@
     },
     "options": {
       "n": [1],
-      "msgsToSend": [1000],
+      "msgsToSend": [10000],
       "msgSendDelay": [0, 1, 5, 10],
       "msgAckDelay": [0],
       "deliveryMode": [1],
