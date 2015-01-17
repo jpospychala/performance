@@ -7,7 +7,13 @@ if [ -z "$DOTOKEN" ]; then
   exit 1
 fi
 
-DROPLETNAME=perftests
+CMD=$1
+DROPLETNAME=$2
+EXTRAARGS=$3
+
+if [ -z "$DROPLETNAME" ]; then
+  DROPLETNAME=perftests
+fi
 DOHOME="https://api.digitalocean.com/v2"
 
 cat <<EOF > .curlargs
@@ -40,7 +46,13 @@ EOF`
   $CURL -X POST -d "$CREATECONTAINER" "$DOHOME/droplets/"
 }
 
-case "$1" in
+case "$CMD" in
+  "runp")
+  ./digitalocean.sh perftests1 rabbitmq_nodejs
+  ./digitalocean.sh perftests2 rabbitmq_java
+  ./digitalocean.sh perftests2 zeromq_nodejs
+  ;;
+
   "run")
 
   GET_DROPLET
@@ -55,11 +67,13 @@ case "$1" in
   fi
 
   # execute
-  scp -oStrictHostKeyChecking=no results/index.json "root@$IP:/root/index.json"
-  ssh -oStrictHostKeyChecking=no "root@$IP" 'bash -s' < run.sh
+  if [ -e results/index.json ]; then
+    scp -oStrictHostKeyChecking=no results/index.json "root@$IP:/root/index.json"
+  fi
+  cat run.sh | sed "s/\(runner.*\)/\1 $EXTRAARGS/" | ssh -oStrictHostKeyChecking=no "root@$IP" 'bash -s'
   scp -r -oStrictHostKeyChecking=no "root@$IP:/root/performance/results.tar.gz" $ID.tar.gz
   tar -zxvf $ID.tar.gz
-  ./report.py results
+  #./report.py results
   ;;
 
   "status")
