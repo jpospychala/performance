@@ -30,25 +30,25 @@ function start() {
                 msgsToSend--;
                 ch.sendToQueue(q, new Buffer(msg), {deliveryMode: config.deliveryMode})
                 console.log(now+','+(now-start));
-            }, config.msgSendDelay);
+            }, config.msgSendDelay, msgsToSend);
           });
         });
       })).ensure(function() { conn.close(); });;
     }).then(null, console.warn);
 };
 
-function setIntOrNow(fn, delay) {
+function setIntOrNow(fn, delay, howMany) {
   if (delay == 0) {
-    return setImmediate(fn);
+    while(howMany-- >= 0) {
+      setImmediate(fn);
+    }
   } else {
     return setInterval(fn, delay);
   }
 }
 
 function clearIntOrNow(intObj, delay) {
-  if (delay == 0) {
-    clearImmediate(intObj);
-  } else {
+  if (delay > 0) {
     clearInterval(intObj);
   }
 }
