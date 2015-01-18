@@ -18,37 +18,31 @@ function start() {
           return when.promise(function(resolve, reject, notify) {
             var start = Date.now();
 
-            var intervalObj = setIntOrNow(function() {
-                if (msgsToSend <= 0) {
-                  clearIntOrNow(intervalObj, config.msgSendDelay);
-                  ch.close().then(resolve);
-                  return;
-                }
+            setIntOrNow(sendMessage, config.msgSendDelay);
 
+            function sendMessage() {
+              if (msgsToSend <= 0) {
+                ch.close().then(resolve);
+                return;
+              } else {
                 var now = Date.now();
                 var msg = padding + (now);
                 msgsToSend--;
                 ch.sendToQueue(q, new Buffer(msg), {deliveryMode: config.deliveryMode})
                 console.log(now+','+(now-start));
-            }, config.msgSendDelay, msgsToSend);
+                setIntOrNow(sendMessage, config.msgSendDelay);
+              }
+            };
           });
         });
       })).ensure(function() { conn.close(); });;
     }).then(null, console.warn);
 };
 
-function setIntOrNow(fn, delay, howMany) {
-  if (delay == 0) {
-    while(howMany-- >= 0) {
-      setImmediate(fn);
-    }
+function setIntOrNow(fn, delay) {
+  if (delay === 0) {
+    setImmediate(fn);
   } else {
-    return setInterval(fn, delay);
-  }
-}
-
-function clearIntOrNow(intObj, delay) {
-  if (delay > 0) {
-    clearInterval(intObj);
+    return setTimeout(fn, delay);
   }
 }
