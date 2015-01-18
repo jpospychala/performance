@@ -22,7 +22,7 @@ fi
 
 npm install
 
-if [ -e ~/index.json ]; then
+if [ -e ~/index.json -a ! -e results/index.json ]; then
   mkdir results
   cp ~/index.json results/index.json
 fi
