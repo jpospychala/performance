@@ -10,9 +10,13 @@ fi
 CMD=$1
 DROPLETNAME=$2
 EXTRAARGS=$3
+SIZE=$4
 
 if [ -z "$DROPLETNAME" ]; then
   DROPLETNAME=perftests
+fi
+if [ -z "$SIZE" ]; then
+  SIZE=512mb
 fi
 DOHOME="https://api.digitalocean.com/v2"
 
@@ -39,7 +43,7 @@ function CREATE_DROPLET {
   {
     "name":"$DROPLETNAME",
     "region":"nyc3",
-    "size":"512mb",
+    "size":"$SIZE",
     "image":"ubuntu-14-04-x64",
     "ssh_keys":$SSHKEYS}
 EOF`
@@ -70,7 +74,7 @@ case "$CMD" in
   if [ -e results/index.json ]; then
     scp -oStrictHostKeyChecking=no results/index.json "root@$IP:/root/index.json"
   fi
-  cat run.sh | sed "s/\(runner.*\)/\1 $EXTRAARGS/" | ssh -oStrictHostKeyChecking=no "root@$IP" 'bash -s'
+  cat run.sh | sed "s/\(runner.*\)/\1 $EXTRAARGS/;s/digitalocean512/digitalocean$SIZE/" | ssh -oStrictHostKeyChecking=no "root@$IP" 'bash -s'
   scp -r -oStrictHostKeyChecking=no "root@$IP:/root/performance/results.tar.gz" $ID.tar.gz
   tar -zxvf $ID.tar.gz
   #./report.py results
