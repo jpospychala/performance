@@ -28,16 +28,32 @@ def main(srcdir):
             continue
 
         logPath = 'results/{0}/{1}.log'.format(entry["id"], entry["params"]["task"])
-        headers, values = readLog(logPath)
+        try:
+            headers, values = readLog(logPath)
+        except:
+            sys.stderr.write("skipping {0}\n".format(entry))
+            continue
+
         stats = []
+        doContinue = False
         for v in values:
+            if len(v) == 0:
+                sys.stderr.write("skipping/no values {0}\n".format(entry))
+                doContinue = True
+                break
             stats.append(calculateStats(v))
+        if doContinue:
+            continue
+
         entry.update({"headers": headers, "stats": stats})
         report.append(entry)
 
-        if (i % 100) == 0 or i == len(index):
+        if (i % 100) == 0:
             with open('report/result.json', 'w') as f:
                 json.dump(report, f)
+
+    with open('report/result.json', 'w') as f:
+        json.dump(report, f)
 
 
 def reportHas(report, e):
