@@ -15,8 +15,8 @@ app.controller('DiagramCtrl', function($scope, dataService) {
   $scope.statisticFuncsSelected = {};
   $scope.params = {};
   $scope.showSeriesDiagram = false;
-  $scope.showAggregateDiagram = true;
-  $scope.showSummaryTable = true;
+  $scope.showAggregateDiagram = false;
+  $scope.showSummaryTable = false;
 
   $scope.$watch('x', setData);
   $scope.$watch('y', switchHeader);
@@ -73,7 +73,9 @@ app.controller('DiagramCtrl', function($scope, dataService) {
     var newData = dataService.dataForParams($scope.params, $scope.y)
       .map(transformToSeries);
 
-    $scope.series = newData;
+    if ($scope.showSummaryTable) {
+      $scope.series = newData;
+    }
 
     if ($scope.showAggregateDiagram) {
       $scope.seriesByFunc = calculateSeriesByFunc(newData);
