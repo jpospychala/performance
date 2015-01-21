@@ -27,13 +27,35 @@ Run the benchmark runner:
 |sleep_node          |node setTimeout accuracy               |
 |sleep_java          |Thread.sleep accuracy                  |
 |sleep_c             |usleep(milisec) accuracy               |
-|rabbits_latency     |producer-consumer latency, node amqplib|
-|rabbits_latency_java|producer-consumer latency, Java Client |
-|zeromq_latency     |producer-consumer latency, node zmq     |
+|rabbitmq_nodejs     |producer-consumer latency, node amqplib|
+|rabbitmq_java       |producer-consumer latency, Java Client |
+|zeromq_nodejs       |producer-consumer latency, node zmq     |
 
 See reports (requires npm install http-server):
 ```
-cd report
 http-server ./
-visit http://localhost:8080
+visit http://localhost:8080/report
+```
+
+Launching benchmars on DigitalOcean:
+------------------------------------
+
+To make the tests repeatable, there's script that automates their invocation on
+ DigitalOcean droplets. It requires an account in DO and DO API key available
+ in environment as $DOTOKEN. Example usage:
+
+ ```bash
+$ env | grep DOTOKEN
+DOTOKEN=4db445b9gf4034jsdldalsdk23232b269k123123uf9hq8293ds
+$ ./digitalocean.sh run node1 rabbitmq_java 512m
+# creates DigitalOcean droplet "node1" with size 512m
+# executes rabbitmq_java benchmarks
+# downloads benchmark results to DROPLETID.tar.gz
+$ ./digitalocean.sh stop node1
+# destroys "node1" droplet
+$ tar -zxf DROPLETID.tar.gz
+$ ./report.py results/
+# generates statistical data for newly obtained results
+#
+# now refresh report website to see new report
 ```
