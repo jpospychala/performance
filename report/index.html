@@ -1,0 +1,123 @@
+<!doctype html>
+<html class="no-js" lang="en" ng-app="app">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Report tool</title>
+  <link rel="stylesheet" href="css/foundation.css" />
+  <script src="js/vendor/modernizr.js"></script>
+  <script src="lib/d3.v3.js"></script>
+  <script src="lib/ramda.min.js"></script>
+  <script src="lib/angular.min.js"></script>
+  <script src="diagram.js"></script>
+  <script src="dataService.js"></script>
+  <script src="report.js"></script>
+  <style>
+  .axis path,
+  .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+  }
+
+  .x.axis path {
+    display: none;
+  }
+
+  .line {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+  }
+
+  .legend {
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+  }
+  </style>
+</head>
+<body>
+
+<div ng-controller="DiagramCtrl">
+  <div id="params_table">
+    <table>
+      <tr>
+        <td>Y<td/>
+        <td ng-repeat="header in headers">
+          <input type="radio" ng-model="$parent.y" ng-value="header"> {{header}}
+        </td>
+      </tr>
+    </table>
+    <table>
+      <tr ng-repeat="(param, values) in params">
+        <td><a href="#" ng-click="toggleAll(values.values, values.hide)">{{param}}</a></td>
+        <td ng-repeat="value in values.values">
+          <input type="checkbox" ng-checked="values.hide.indexOf(value) == -1" ng-click="toggle(value, values.hide)"> {{value}}
+        </td>
+      </tr>
+    </table>
+    <div class="large-12 columns">
+      <input id="checkbox1" type="checkbox" ng-model="showSeriesDiagram"><label for="checkbox1">Series diagram</label>
+      <input id="checkbox2" type="checkbox" ng-model="showAggregateDiagram"><label for="checkbox2">Aggregate diagram</label>
+      <input id="checkbox3" type="checkbox" ng-model="showSummaryTable"><label for="checkbox3">Summary</label>
+    </div>
+  </div>
+
+  <div ng-show="showAggregateDiagram">
+    <div class="large-12 columns">
+      Group by:
+      <span ng-repeat="(param, values) in params">
+        <input type="radio" ng-model="$parent.groupBy" ng-value="param"> {{param}}
+      </span>
+    </div>
+    <div class="large-12 columns">
+      Function:
+      <span ng-repeat="f in funcs">
+        <input type="checkbox" ng-model="f.selected" ng-value="f.name"> {{f.label}}
+      </span>
+    </div>
+    <input id="checkbox4" type="checkbox" ng-model="showAggregateTable"><label for="checkbox4">Data table</label>
+    <table border="1" ng-show="showAggregateTable">
+      <tr>
+        <td>Label</td>
+      </tr>
+      <tr ng-repeat="(hash, serie) in seriesByFunc">
+        <td>{{serie.name}}</td>
+        <td ng-repeat="o in serie.values">{{o.x}}, {{o.y}}</td>
+      </tr>
+    </table>
+    <div id="aggrDiagram"></div>
+  </div>
+
+  <div ng-show="showSeriesDiagram">
+    <div class="large-12 columns">
+    X axis:
+      <span ng-repeat="header in headers">
+        <input type="radio" ng-model="$parent.x" ng-value="header"> {{header}}
+      </span>
+    </div>
+
+    <div id="seriesDiagram"></div>
+  </div>
+
+  <div id="summary_table" ng-show="showSummaryTable">
+    <table border="1">
+      <tr>
+        <td ng-repeat="(param, values) in params">{{param}}</td>
+        <td ng-repeat="f in funcs">{{f.label}}</td>
+      </tr>
+      <tr ng-repeat="serie in series">
+        <td ng-repeat="(param, values) in params">{{serie.params[param]}}</td>
+        <td ng-repeat="f in funcs">{{serie[f.name]}}</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<script src="js/vendor/jquery.js"></script>
+<script src="js/foundation.min.js"></script>
+<script>
+$(document).foundation();
+</script>
+</body>
+</html>
