@@ -19,7 +19,7 @@ public class Consumer {
     int prefetchCount = Integer.parseInt(params.get("prefetchCount"));
     boolean autoAck = Boolean.parseBoolean(params.get("autoAck"));
 
-    System.out.println("ts (ms),time (ms),latency (ms),consume (ms)");
+    System.out.println("time (ms),latency (ms),consume (ms)");
 
     ConnectionFactory factory = new ConnectionFactory();
     factory.setHost("localhost");
@@ -43,7 +43,7 @@ public class Consumer {
     	  start = now;
     	  last = now;
       }
-      System.out.println(now+","+(now-start)+","+(now-then)+","+(now-last));
+      System.out.println((now-start)+","+(now-then)+","+(now-last));
       last = now;
 
       if (msgAckDelay > 0) {

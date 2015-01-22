@@ -6,7 +6,7 @@ var msgsToSend = config.msgsToSend;
 var start;
 var last;
 
-console.log('ts (ms),time (ms),latency (ms),consume (ms)');
+console.log('time (ms),latency (ms),consume (ms)');
 subscriber.on("message", function(msg) {
   var now = Date.now();
   var then = 1*msg.toString();
@@ -14,7 +14,7 @@ subscriber.on("message", function(msg) {
     start = now;
     last = now;
   }
-  console.log(now+','+(now-start)+','+(now-then)+','+(now-last));
+  console.log((now-start)+','+(now-then)+','+(now-last));
   last = now;
 
   msgsToSend--;

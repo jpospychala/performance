@@ -33,12 +33,12 @@ public class Producer {
     Thread.sleep(1000);
     channel.queueDeclarePassive(queueName);
 
-    System.out.println("ts (ms),time (ms)");
+    System.out.println("time (ms)");
     long start = System.currentTimeMillis();
     for (int i = 0; i < msgsToSend; i++) {
         long now = System.currentTimeMillis();
         channel.basicPublish("", queueName, msgProperties, Long.toString(now).getBytes());
-        System.out.println(now+","+(now-start));
+        System.out.println((now-start));
         Thread.sleep(msgSendDelay);
     }
 

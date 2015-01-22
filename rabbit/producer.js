@@ -7,7 +7,7 @@ var padding = new Array(Math.max(0, config.msgSize - (Date.now()+'').length)).jo
 
 setTimeout(start, 1000);
 
-console.log('ts (ms),time (ms)');
+console.log('time (ms)');
 function start() {
     amqp.connect('amqp://localhost').then(function(conn) {
       return when(conn.createChannel().then(function(ch) {
@@ -29,7 +29,7 @@ function start() {
                 var msg = padding + (now);
                 msgsToSend--;
                 ch.sendToQueue(q, new Buffer(msg), {deliveryMode: config.deliveryMode})
-                console.log(now+','+(now-start));
+                console.log((now-start));
                 setIntOrNow(sendMessage, config.msgSendDelay);
               }
             };

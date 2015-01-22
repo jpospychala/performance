@@ -6,7 +6,7 @@ var msgsToSend = config.msgsToSend;
 amqp.connect('amqp://localhost').then(function(conn) {
   process.once('SIGINT', function() { conn.close(); });
   return conn.createChannel().then(function(ch) {
-    console.log('ts (ms),time (ms),latency (ms),consume (ms)');
+    console.log('time (ms),latency (ms),consume (ms)');
     var ok = ch.assertQueue(config.queue, {autoDelete: true, durable: config.queueDurable})
     .then(function() {
       return ch.purgeQueue(config.queue);
@@ -25,7 +25,7 @@ amqp.connect('amqp://localhost').then(function(conn) {
           start = now;
           last = now;
         }
-        console.log(now+','+(now-start)+','+(now-then)+','+(now-last));
+        console.log((now-start)+','+(now-then)+','+(now-last));
         last = now;
 
         if (config.msgAckDelay > 0) {

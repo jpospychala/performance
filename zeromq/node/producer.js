@@ -13,7 +13,7 @@ publisher.bind('tcp://*:8688', function(err) {
 });
 
 function start() {
-  console.log('ts (ms),time (ms)');
+  console.log('time (ms)');
   var start = Date.now();
   var intervalObj = setInterval(function() {
       if (msgsToSend <= 0) {
@@ -26,6 +26,6 @@ function start() {
       var msg = padding + now;
       msgsToSend--;
       publisher.send(msg)
-      console.log(now+','+(now-start));
+      console.log((now-start));
   }, config.msgSendDelay);
 }
