@@ -41,6 +41,9 @@ app.service('dataService', function($q) {
 
 
     self.dataForParams = function(filterParams, headerName) {
+      if (Object.keys(filterParams).length == 0) {
+        return [];
+      }
       if (self.data === undefined) {
         return [];
       }

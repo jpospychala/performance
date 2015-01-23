@@ -50,20 +50,20 @@
     </table>
     <table>
       <tr ng-repeat="(param, values) in params">
-        <td><a href="#" ng-click="toggleAll(values.values, values.hide)">{{param}}</a></td>
+        <td><a href="" ng-click="toggleAll(values.values, values.hide)">{{param}}</a></td>
         <td ng-repeat="value in values.values">
           <input type="checkbox" ng-checked="values.hide.indexOf(value) == -1" ng-click="toggle(value, values.hide)"> {{value}}
         </td>
       </tr>
     </table>
     <div class="large-12 columns">
-      <input id="checkbox1" type="checkbox" ng-model="showSeriesDiagram"><label for="checkbox1">Series diagram</label>
-      <input id="checkbox2" type="checkbox" ng-model="showAggregateDiagram"><label for="checkbox2">Aggregate diagram</label>
-      <input id="checkbox3" type="checkbox" ng-model="showSummaryTable"><label for="checkbox3">Summary</label>
+      <input id="checkbox1" type="checkbox" ng-model="seriesd"><label for="checkbox1">Series diagram</label>
+      <input id="checkbox2" type="checkbox" ng-model="aggrd"><label for="checkbox2">Aggregate diagram</label>
+      <input id="checkbox3" type="checkbox" ng-model="tbl"><label for="checkbox3">Summary</label>
     </div>
   </div>
 
-  <div ng-show="showAggregateDiagram">
+  <div ng-show="aggrd">
     <div class="large-12 columns">
       Group by:
       <span ng-repeat="(param, values) in params">
@@ -89,7 +89,7 @@
     <div id="aggrDiagram"></div>
   </div>
 
-  <div ng-show="showSeriesDiagram">
+  <div ng-show="seriesd">
     <div class="large-12 columns">
     X axis:
       <span ng-repeat="header in headers">
@@ -100,7 +100,7 @@
     <div id="seriesDiagram"></div>
   </div>
 
-  <div id="summary_table" ng-show="showSummaryTable">
+  <div id="summary_table" ng-show="tbl">
     <table border="1">
       <tr>
         <td ng-repeat="(param, values) in params">{{param}}</td>

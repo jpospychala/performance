@@ -1,4 +1,4 @@
-app.controller('DiagramCtrl', function($scope, dataService) {
+app.controller('DiagramCtrl', function($scope, dataService, $location) {
   $scope.funcs = [
     {name: "min", label: "min", selected: false },
     {name: "max", label: "max", selected: false },
@@ -12,14 +12,11 @@ app.controller('DiagramCtrl', function($scope, dataService) {
     {name: "throughput", label: "count/(max-min)", selected: false }
   ];
 
-  $scope.statisticFuncsSelected = {};
+  var opts = $location.search();
   $scope.params = {};
-  $scope.showSeriesDiagram = false;
-  $scope.showAggregateDiagram = false;
-  $scope.showSummaryTable = false;
-
-  $scope.$watch('x', setData);
-  $scope.$watch('y', switchHeader);
+  $scope.seriesd = opts.seriesd || false;
+  $scope.aggrd = opts.aggrd || false;
+  $scope.tbl = opts.tbl || false;
 
   var d = new Diagram("#seriesDiagram");
   d.drawDots = false;
@@ -27,8 +24,11 @@ app.controller('DiagramCtrl', function($scope, dataService) {
 
   dataService.init().then(function(data) {
     $scope.headers = dataService.getHeaders(data);
-    $scope.x = $scope.headers[0];
-    $scope.y = $scope.headers[1];
+    $scope.x = opts.x || $scope.headers[0];
+    $scope.y = opts.y || $scope.headers[1];
+
+    $scope.$watch('y', switchHeader);
+    $scope.$watch('x', setData);
   });
 
   function switchHeader() {
@@ -43,6 +43,16 @@ app.controller('DiagramCtrl', function($scope, dataService) {
         }
       });
     }
+
+    Object.keys(newParams).forEach(function(param) {
+      newParams[param].values.forEach(function(v) {
+        if (opts[param+v]) {
+          newParams[param].hide.splice(newParams[param].hide.indexOf(v), 1);
+        } else {
+          newParams[param].hide.push(param);
+        }
+      });
+    });
     $scope.params = newParams;
   }
 
@@ -73,21 +83,23 @@ app.controller('DiagramCtrl', function($scope, dataService) {
     var newData = dataService.dataForParams($scope.params, $scope.y)
       .map(transformToSeries);
 
-    if ($scope.showSummaryTable) {
+    if ($scope.tbl) {
       $scope.series = newData;
     }
 
-    if ($scope.showAggregateDiagram) {
+    if ($scope.aggrd) {
       $scope.seriesByFunc = calculateSeriesByFunc(newData);
       d2.setData($scope.seriesByFunc, $scope.groupBy, $scope.y);
     }
 
-    if ($scope.showSeriesDiagram) {
+    if ($scope.seriesd) {
       dataService.getAllValues(newData, $scope.x, $scope.y)
       .then(function(newData) {
         d.setData(newData, $scope.x, $scope.y);
       });
     }
+
+    setSearch();
 
     function calculateSeriesByFunc(data) {
       var out = {};
@@ -144,6 +156,29 @@ app.controller('DiagramCtrl', function($scope, dataService) {
         });
       }
       return ret;
+    }
+
+    function setSearch() {
+      var opts = {
+        x: $scope.x,
+        y: $scope.y,
+        seriesd: $scope.seriesd,
+        aggrd: $scope.aggrd,
+        tbl: $scope.tbl
+      }
+      Object.keys($scope.params)
+      .sort()
+      .forEach(function(p) {
+        var param = $scope.params[p];
+        param.values
+        .filter(function(v) {
+          return (param.hide.indexOf(v) === -1);
+        })
+        .forEach(function(v) {
+          opts[p+v]=true;
+        });
+      })
+      $location.search(opts);
     }
   }
 });
