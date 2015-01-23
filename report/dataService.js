@@ -69,7 +69,7 @@ app.service('dataService', function($q) {
       var i = -1;
       var xGet = valueFunc(x);
       var yGet = valueFunc(y);
-      d3.csv('/results/'+d.id+'/'+d.params.task+'.log')
+      d3.csv('../results/'+d.id+'/'+d.params.task+'.log')
       .row(function (row) {
         i++;
         return {x: xGet(row), y: +yGet(row) };
