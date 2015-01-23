@@ -4,3 +4,4 @@ report/result.json
 .vagrant
 sleep/c/sleep
 *.class
+report
