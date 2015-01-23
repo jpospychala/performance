@@ -72,7 +72,7 @@ app.service('dataService', function($q) {
       d3.csv('../results/'+d.id+'/'+d.params.task+'.log')
       .row(function (row) {
         i++;
-        return {x: xGet(row), y: +yGet(row) };
+        return {x: +xGet(row), y: +yGet(row) };
         })
       .get(function (error, rows) {
         deferred.resolve(R.mixin(d, {values: rows}));
