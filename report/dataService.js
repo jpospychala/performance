@@ -51,9 +51,8 @@ app.service('dataService', function($q) {
       return self.data.filter(function(d) {
         var filtered = true;
         Object.keys(filterParams).forEach(function(param) {
-          var v = JSON.stringify(d.params[param]);
-          filtered = filtered && (filterParams[param].hide.indexOf(v) ==
-          -1);
+          var v = d.params[param];
+          filtered = filtered && (filterParams[param].hide.indexOf(v) == -1);
         });
         filtered = filtered && (d.headers.indexOf(headerName) > -1);
         filtered = filtered && (d.headers.indexOf(headerName) > -1);
@@ -104,7 +103,7 @@ app.service('dataService', function($q) {
           if (ignoredParams.indexOf(param) > -1) {
             return;
           }
-          var newVal = JSON.stringify(d.params[param]);
+          var newVal = d.params[param];
           if (!params[param]) {
             params[param] = {
               values: [newVal],
