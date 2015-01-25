@@ -37,27 +37,19 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
     if ($scope.params) {
       Object.keys($scope.params).forEach(function(param) {
         if (newParams[param]) {
-          var sameAsCurrent = R.intersection(newParams[param].values, $scope.params[param].values);
-          if (sameAsCurrent.length == newParams[param].values.length) {
-            newParams[param].hide = $scope.params[param].hide;
+          var sameAsCurrent = R.intersection(Object.keys(newParams[param]), Object.keys($scope.params[param]));
+          if (sameAsCurrent.length == Object.keys(newParams[param]).length) {
+            Object.keys(newParams[param]).forEach(function (key) {
+              newParams[param][key] = $scope.params[param][key];
+            });
           }
         }
       });
     }
 
     Object.keys(newParams).forEach(function(param) {
-      newParams[param].values.forEach(function(v) {
-        if (opts[param+v] === true) {
-          var idx = newParams[param].hide.indexOf(v);
-          if (idx > -1) {
-            newParams[param].hide.splice(idx, 1);
-          }
-        } else {
-          var idx = newParams[param].hide.indexOf(v);
-          if (idx === -1) {
-            newParams[param].hide.push(v);
-          }
-        }
+      Object.keys(newParams[param]).forEach(function(key) {
+        newParams[param][key] = (opts[param+key] === true);
       });
     });
     $scope.params = newParams;
@@ -67,27 +59,25 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
     $scope.locked = !$scope.locked;
   }
 
-  $scope.toggle = function(param, values) {
-    var idx = values.indexOf(param);
-    if (idx == -1) {
-      values.push(param);
-    } else {
-      values.splice(idx, 1);
-    }
+  $scope.toggle = function(param, key, value) {
+    $scope.params[param][key] = !value;
     setData();
   };
-  $scope.toggleAll = function(params, values) {
-    if (values.length < params.length) {
-      values.splice.apply(values, [0, values.length].concat(params));
-    } else {
-      values.splice(0, values.length);
-    }
+  $scope.toggleAll = function(param) {
+    var truthyCount = 0;
+    Object.keys($scope.params[param]).forEach(function(key) {
+      truthyCount += ($scope.params[param][key] ? 1 : 0);
+    });
+    var newVal = (truthyCount < Object.keys($scope.params[param]).length)
+    Object.keys($scope.params[param]).forEach(function(key) {
+      $scope.params[param][key] = newVal;
+    });
     setData();
   }
 
   function setData() {
     var uniqueParams = Object.keys($scope.params).filter(function(param) {
-      return $scope.params[param].values.length - $scope.params[param].hide.length > 1;
+      return R.values($scope.params[param]).filter(R.eq(true)).length > 1;
     });
 
     var newData = dataService.dataForParams($scope.params, $scope.y)
@@ -180,13 +170,10 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
       Object.keys($scope.params)
       .sort()
       .forEach(function(p) {
-        var param = $scope.params[p];
-        param.values
-        .filter(function(v) {
-          return param.hide.indexOf(v) === -1;
-        })
-        .forEach(function(v) {
-          opts[p+v]=true;
+        Object.keys($scope.params[p]).forEach(function(key) {
+          if ($scope.params[p][key]) {
+            opts[p+key]=true;
+          }
         });
       })
       $location.search(opts);

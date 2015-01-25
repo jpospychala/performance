@@ -52,7 +52,7 @@ app.service('dataService', function($q) {
         var filtered = true;
         Object.keys(filterParams).forEach(function(param) {
           var v = d.params[param];
-          filtered = filtered && (filterParams[param].hide.indexOf(v) == -1);
+          filtered = filtered && (filterParams[param][v] === true);
         });
         filtered = filtered && (d.headers.indexOf(headerName) > -1);
         filtered = filtered && (d.headers.indexOf(headerName) > -1);
@@ -105,18 +105,15 @@ app.service('dataService', function($q) {
           }
           var newVal = d.params[param];
           if (!params[param]) {
-            params[param] = {
-              values: [newVal],
-              hide: [newVal]
-            };
-          } else if (params[param].values.indexOf(newVal) == -1) {
-            params[param].values.push(newVal);
-            params[param].hide.push(newVal);
+            params[param] = {};
+          }
+          if (params[param][newVal] === undefined) {
+            params[param][newVal] = true;
           }
         });
       });
       Object.keys(params).forEach(function(param) {
-        if (params[param].values.length <= 1) {
+        if (Object.keys(params[param]).length <= 1) {
           delete params[param];
         }
       });
