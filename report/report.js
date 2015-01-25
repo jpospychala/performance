@@ -17,6 +17,7 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
   $scope.seriesd = opts.seriesd || false;
   $scope.aggrd = opts.aggrd || false;
   $scope.tbl = opts.tbl || false;
+  $scope.locked = !!opts.lock || false;
 
   var d = new Diagram("#seriesDiagram");
   d.drawDots = false;
@@ -60,6 +61,10 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
       });
     });
     $scope.params = newParams;
+  }
+
+  $scope.toggleLock = function() {
+    $scope.locked = !$scope.locked;
   }
 
   $scope.toggle = function(param, values) {
@@ -169,7 +174,8 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
         y: $scope.y,
         seriesd: $scope.seriesd,
         aggrd: $scope.aggrd,
-        tbl: $scope.tbl
+        tbl: $scope.tbl,
+        lock: $scope.locked
       }
       Object.keys($scope.params)
       .sort()

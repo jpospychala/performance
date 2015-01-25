@@ -34,12 +34,18 @@
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     font-size: 14px;
   }
+
+  .locked {
+    display: none;
+  }
   </style>
 </head>
 <body>
 
 <div ng-controller="DiagramCtrl">
-  <div id="params_table">
+  <h1 ng-class="{locked: !locked}">{{y}} in function of {{x}}</h1>
+  <input id="lock" type="checkbox" ng-model="locked" ng-click="toggleLock()"><label for="lock">Lock</label>
+  <div id="params_table" ng-class="{locked: locked}">
     <table>
       <tr>
         <td>Y<td/>
@@ -64,19 +70,21 @@
   </div>
 
   <div ng-show="aggrd">
-    <div class="large-12 columns">
-      Group by:
-      <span ng-repeat="(param, values) in params">
-        <input type="radio" ng-model="$parent.groupBy" ng-value="param"> {{param}}
-      </span>
+    <div ng-class="{locked: locked}">
+      <div class="large-12 columns">
+        Group by:
+        <span ng-repeat="(param, values) in params">
+          <input type="radio" ng-model="$parent.groupBy" ng-value="param"> {{param}}
+        </span>
+      </div>
+      <div class="large-12 columns">
+        Function:
+        <span ng-repeat="f in funcs">
+          <input type="checkbox" ng-model="f.selected" ng-value="f.name"> {{f.label}}
+        </span>
+      </div>
+      <input id="checkbox4" type="checkbox" ng-model="showAggregateTable"><label for="checkbox4">Data table</label>
     </div>
-    <div class="large-12 columns">
-      Function:
-      <span ng-repeat="f in funcs">
-        <input type="checkbox" ng-model="f.selected" ng-value="f.name"> {{f.label}}
-      </span>
-    </div>
-    <input id="checkbox4" type="checkbox" ng-model="showAggregateTable"><label for="checkbox4">Data table</label>
     <table border="1" ng-show="showAggregateTable">
       <tr>
         <td>Label</td>
@@ -90,7 +98,7 @@
   </div>
 
   <div ng-show="seriesd">
-    <div class="large-12 columns">
+    <div class="large-12 columns" ng-class="{locked: locked}">
     X axis:
       <span ng-repeat="header in headers">
         <input type="radio" ng-model="$parent.x" ng-value="header"> {{header}}
