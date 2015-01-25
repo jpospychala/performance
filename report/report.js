@@ -1,4 +1,5 @@
 app.controller('DiagramCtrl', function($scope, dataService, $location) {
+  $scope.R = R;
   $scope.funcs = [
     {name: "min", label: "min", selected: false },
     {name: "max", label: "max", selected: false },
@@ -17,7 +18,14 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
   $scope.seriesd = opts.seriesd || false;
   $scope.aggrd = opts.aggrd || false;
   $scope.tbl = opts.tbl || false;
-  $scope.locked = !!opts.lock || false;
+  $scope.locked = opts.locked || false;
+  $scope.groupBy = opts.groupBy;
+
+  $scope.funcs.forEach(function(f) {
+    if (opts[f.name]) {
+      f.selected = true;
+    }
+  });
 
   var d = new Diagram("#seriesDiagram");
   d.drawDots = false;
@@ -55,6 +63,15 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
     $scope.params = newParams;
   }
 
+  $scope.truthy = function(objWithProps) {
+    return R.toPairs(objWithProps).filter(function(prop) {
+      return prop[1] === true;
+    })
+    .map(R.head);
+  }
+  $scope.selectedFuncs = function() {
+    return $scope.funcs.filter(R.path('selected')).map(R.path('label')).join(' and ');
+  }
   $scope.toggleLock = function() {
     $scope.locked = !$scope.locked;
   }
@@ -162,11 +179,12 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
       var opts = {
         x: $scope.x,
         y: $scope.y,
-        seriesd: $scope.seriesd,
-        aggrd: $scope.aggrd,
-        tbl: $scope.tbl,
-        lock: $scope.locked
-      }
+      };
+      ['seriesd', 'aggrd', 'tbl', 'locked', 'groupBy'].forEach(function(key) {
+        if ($scope[key]) {
+          opts[key] = true;
+        }
+      });
       Object.keys($scope.params)
       .sort()
       .forEach(function(p) {
@@ -175,7 +193,12 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
             opts[p+key]=true;
           }
         });
-      })
+      });
+      $scope.funcs.forEach(function(f) {
+        if (f.selected) {
+          opts[f.name] = true;
+        }
+      });
       $location.search(opts);
     }
   }
