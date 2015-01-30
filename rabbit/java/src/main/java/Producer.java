@@ -13,7 +13,8 @@ public class Producer {
     Arrays.asList(argv).stream()
     .forEach(s -> { String[] ss = s.split("="); params.put(ss[0], ss[1]); } );
     String queueName = params.get("queue");
-    int msgsToSend = Integer.parseInt(params.get("msgsToSend"));
+    int producerThreads = Integer.parseInt(params.get("producerThreads"));
+    int msgsToSend = Integer.parseInt(params.get("msgsToSend")) / producerThreads;
     int msgSendDelay = Integer.parseInt(params.get("msgSendDelay"));
     int deliveryMode = Integer.parseInt(params.get("deliveryMode"));
     int msgSize = Integer.parseInt(params.get("msgSize"));

@@ -10,7 +10,7 @@
     "after": ["docker", "stop", "rabbit_docker"],
     "options": {
       "n": [1],
-      "producerThreads": [1],
+      "producerThreads": [1, 2, 4, 8],
       "consumerThreads": [1],
       "msgsToSend": [10000],
       "msgSendDelay": [0, 1, 5, 10],
@@ -35,7 +35,7 @@
     "after": ["docker", "stop", "rabbit_docker"],
     "options": {
       "n": [1],
-      "producerThreads": [1],
+      "producerThreads": [1, 2, 4, 8],
       "consumerThreads": [1],
       "msgsToSend": [10000],
       "msgSendDelay": [0, 1, 5, 10],

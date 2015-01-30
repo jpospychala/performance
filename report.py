@@ -2,6 +2,7 @@
 
 import json
 import sys
+import os
 import math
 import functools
 import numpy
@@ -30,8 +31,8 @@ def main(srcdir):
         logPath = 'results/{0}/{1}.log'.format(entry["id"], entry["params"]["task"])
         try:
             headers, values = readLog(logPath)
-        except:
-            sys.stderr.write("skipping {0}\n".format(entry))
+        except RuntimeError as ex:
+            sys.stderr.write("skipping {0} {1}\n".format(entry, ex))
             continue
 
         stats = []
@@ -96,15 +97,21 @@ def percentile(v, percent):
 def readLog(path):
     headers = []
     values = []
-    with open(path, 'r') as f:
-        headers = f.next().strip().split(',')
+    with open(path, 'r') as f, open('tmprewr', 'w+') as w:
+        headersLine = f.next()
+        w.write(headersLine)
+        headers = headersLine.strip().split(',')
         for i in range(len(headers)):
             values.append([])
         for line in f:
+            if line == headersLine:
+                continue
+            w.write(line)
             j = 0
             for x in line.split(','):
                 values[j].append(int(x))
                 j += 1
+    os.rename('tmprewr', path)
     return headers, values
 
 

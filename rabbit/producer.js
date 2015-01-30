@@ -2,7 +2,7 @@ var amqp = require('amqplib');
 var when = require('when');
 var config = JSON.parse(process.argv[2]);
 
-var msgsToSend = config.msgsToSend;
+var msgsToSend = config.msgsToSend / config.producerThreads;
 var padding = new Array(Math.max(0, config.msgSize - (Date.now()+'').length)).join(' ');
 
 setTimeout(start, 1000);

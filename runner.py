@@ -83,7 +83,7 @@ def process(configFile, configName, runreport, verbose, dryRun, doBuild, instanc
 
     if not dryRun and "before" in config:
       subprocess.call(config["before"], cwd=config.get("workdir"))
-
+    
     i = 0;
     n = len(allVariants)
     for variant in allVariants:
@@ -122,6 +122,7 @@ def run(config, id, verbose):
   logdir = 'results/'+id+'/'
   processes = []
   logPaths = {}
+  logFiles = []
   if not os.path.exists(logdir):
     os.makedirs(logdir)
   cwd = config.get("workdir")
@@ -132,10 +133,16 @@ def run(config, id, verbose):
     logPaths[taskName] = logpath
     if verbose:
       print logpath
-    p = subprocess.Popen(t + params(config), stdout=open(logpath,'w+'), cwd=cwd)
-    processes.append(p)
+    logPathF=open(logpath,'w+')
+    logFiles.append(logPathF)
+    threadsCount = config["config"].get(taskName + "Threads", 1)
+    for i in range(threadsCount):
+      p = subprocess.Popen(t + params(config), stdout=logPathF, cwd=cwd)
+      processes.append(p)
   for p in processes:
     p.wait()
+  for logFile in logFiles:
+    logFile.close()
   if "afterEach" in config:
     subprocess.call(config["afterEach"], cwd=cwd)
   return logPaths
