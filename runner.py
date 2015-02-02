@@ -88,12 +88,7 @@ def process(configFile, runreport, options):
       c.update({"config": variant})
       allVariants.append(c)
 
-    if options["doBuild"] and "build" in config:
-      subprocess.call(config["build"], cwd=config.get("workdir"))
-
-    if not options["dryRun"] and "before" in config:
-      subprocess.call(config["before"], cwd=config.get("workdir"))
-
+    actuallyRanVariant = 0
     i = 0;
     n = len(allVariants)
     for variant in allVariants:
@@ -120,6 +115,14 @@ def process(configFile, runreport, options):
       if options["dryRun"]:
         continue
 
+      if actuallyRanVariant == 0:
+        if options["doBuild"] and "build" in config:
+          subprocess.call(config["build"], cwd=config.get("workdir"))
+
+        if "before" in config:
+          subprocess.call(config["before"], cwd=config.get("workdir"))
+
+      actuallyRanVariant += 1
       logpaths = run(variant, id, options["verbose"])
       for task, path in logpaths.items():
         params = variant["config"].copy()
@@ -130,7 +133,7 @@ def process(configFile, runreport, options):
         with open('results/index.json', 'w') as f:
           json.dump(runreport, f)
 
-    if not options["dryRun"] and "before" in config:
+    if actuallyRanVariant > 0 and not options["dryRun"] and "before" in config:
       subprocess.call(config["before"], cwd=config.get("workdir"))
 
 
