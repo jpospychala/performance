@@ -11,6 +11,7 @@ CMD=$1
 DROPLETNAME=$2
 EXTRAARGS=$3
 SIZE=$4
+CFGSTORUN=$5
 
 if [ -z "$DROPLETNAME" ]; then
   DROPLETNAME=perftests
@@ -20,12 +21,12 @@ if [ -z "$SIZE" ]; then
 fi
 DOHOME="https://api.digitalocean.com/v2"
 
-cat <<EOF > .curlargs
+cat <<EOF > .curlargs.$$
 -s
 -H "Authorization: Bearer $DOTOKEN"
 -H "Content-Type: application/json"
 EOF
-CURL="curl -K .curlargs"
+CURL="curl -K .curlargs.$$"
 
 function GET_DROPLET {
   DROPLET=`$CURL "$DOHOME/droplets/" | \
@@ -51,10 +52,18 @@ EOF`
 }
 
 case "$CMD" in
-  "runp")
-  ./digitalocean.sh perftests1 rabbitmq_nodejs
-  ./digitalocean.sh perftests2 rabbitmq_java
-  ./digitalocean.sh perftests2 zeromq_nodejs
+  "parallel")
+  rm -rf .inqueue*
+  ./runner.py -q -d sleep_node | sort | uniq > .inqueue
+  RUNNERS=1
+  LINES=$(cat .inqueue | wc -l)
+  ((LINES_PER_RUNNER = (LINES + RUNNERS - 1) / RUNNERS))
+
+  split -l $LINES_PER_RUNNER .inqueue .inqueue.
+  for i in .inqueue.*; do
+    echo run $i
+    ./digitalocean.sh run droplet$i "" 512mb $i | tee $i.log &
+  done
   ;;
 
   "run")
@@ -74,9 +83,13 @@ case "$CMD" in
   if [ -e results/index.json ]; then
     scp -oStrictHostKeyChecking=no results/index.json "root@$IP:/root/index.json"
   fi
-  cat run.sh | sed "s/\(runner.*\)/\1 $EXTRAARGS/;s/digitalocean512/digitalocean$SIZE/" | ssh -oStrictHostKeyChecking=no "root@$IP" 'bash -s'
+  if [ -e "$CFGSTORUN" ]; then
+    scp -oStrictHostKeyChecking=no $CFGSTORUN "root@$IP:/root/cfgstorun.txt"
+  fi
+  cat run.sh | sed "s/#EXTRAARG/$EXTRAARGS/;s/digitalocean512/digitalocean$SIZE/" | ssh -oStrictHostKeyChecking=no "root@$IP" 'bash -s'
   scp -r -oStrictHostKeyChecking=no "root@$IP:/root/performance/results.tar.gz" $ID.tar.gz
   tar -zxvf $ID.tar.gz
+  #./digitalocean.sh stop "$DROPLETNAME"
   #./report.py results
   ;;
 
@@ -104,4 +117,4 @@ case "$CMD" in
   ;;
 esac
 
-rm .curlargs
+rm .curlargs.$$
