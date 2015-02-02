@@ -2,8 +2,9 @@
   "rabbitmq_nodejs": {
     "workdir": "rabbit",
     "tasks": {
-      "consumer": ["node", "consumer.js"],
-      "producer": ["node", "producer.js"]
+      "consumer": {"cmd": ["node", "consumer.js"]},
+      "producer": {"cmd": ["node", "producer.js"]},
+      "monitor": {"cmd": ["node", "../monitor/monitor.js"], "kill": true}
     },
     "build": ["make", "rabbit_docker_image"],
     "before": ["docker", "start", "rabbit_docker"],
@@ -28,8 +29,9 @@
     "params_style": "key_value",
     "build": ["make", "rabbit_docker_image", "mvncleaninstall"],
     "tasks": {
-      "producer": ["java", "-cp", "target/deps/amqp-client-3.3.5.jar:target/rabbits-0.0.1-SNAPSHOT.jar", "Producer"],
-      "consumer": ["java", "-cp", "target/deps/amqp-client-3.3.5.jar:target/rabbits-0.0.1-SNAPSHOT.jar", "Consumer"]
+      "consumer": {"cmd": ["java", "-cp", "target/deps/amqp-client-3.3.5.jar:target/rabbits-0.0.1-SNAPSHOT.jar", "Consumer"]},
+      "producer": {"cmd": ["java", "-cp", "target/deps/amqp-client-3.3.5.jar:target/rabbits-0.0.1-SNAPSHOT.jar", "Producer"]},
+      "monitor": {"cmd": ["nodde", "../../monitor/monitor.js"], "kill": true}
     },
     "before": ["docker", "start", "rabbit_docker"],
     "after": ["docker", "stop", "rabbit_docker"],
@@ -51,8 +53,9 @@
   "zeromq_nodejs": {
     "workdir": "zeromq/node",
     "tasks": {
-      "consumer": ["node", "consumer.js"],
-      "producer": ["node", "producer.js"]
+      "consumer": {"cmd": ["node", "consumer.js"]},
+      "producer": {"cmd": ["node", "producer.js"]},
+      "monitor": {"cmd": ["node", "../monitor/monitor.js"], "kill": true}
     },
     "options": {
       "n": [1],
@@ -70,7 +73,7 @@
   "sleep_node": {
     "workdir": "sleep",
     "tasks": {
-      "sleep": ["node", "./count.js"]
+      "sleep": {"cmd": ["node", "./count.js"]}
     },
     "options": {
       "n": [2, 1000],
@@ -82,7 +85,7 @@
     "params_style": "key_value",
     "build": ["javac", "Sleep.java"],
     "tasks": {
-      "sleep": ["java", "Sleep"]
+      "sleep": {"cmd": ["java", "Sleep"]}
     },
     "options": {
       "n": [2, 1000],
@@ -94,7 +97,7 @@
     "params_style": "key_value",
     "build": ["gcc", "sleep.c", "-o", "sleep"],
     "tasks": {
-      "sleep": ["./sleep"]
+      "sleep": {"cmd": ["./sleep"]}
     },
     "options": {
       "n": [2, 1000],
