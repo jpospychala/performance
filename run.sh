@@ -31,7 +31,7 @@ if [ -e ~/index.json -a ! -e results/index.json ]; then
 fi
 
 if [ -e ~/cfgstorun.txt ]; then
-  cat ~/cfgstorun.txt | while read L; do ./runner.py -b -i "$L"; done
+  ./runner.py -b -i @~/cfgstorun.txt
 else
   ./runner.py -b #EXTRAARG
 fi
