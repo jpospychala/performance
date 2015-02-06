@@ -42,10 +42,13 @@ def main(argv):
     if opt in ("-c", "--config"):
       configFileName = arg
     if opt in ("-i", "--instance"):
-      options["instance"] = arg
+      if len(arg) > 0 and arg[0] == '@':
+        with open(arg[1:], 'r') as f:
+          options["instances"] = [line.strip() for line in f]
+      else:
+        options["instances"] = [arg]
 
   options["configName"] = args and args.pop(0)
-
   with open(configFileName, 'r') as f:
     configFile = json.load(f)
 
@@ -96,12 +99,13 @@ def process(configFile, runreport, options):
       id = createId(variant)
       cfgDetails = json.dumps(pick(optionsKeys, variant["config"]), sort_keys=True)
 
-      if options["instance"] != None and options["instance"] != id and options["instance"] != cfgDetails:
+      isOneOfExpectedInstances = "instances" not in options or id in options["instances"] or cfgDetails in options["instances"]
+      if not isOneOfExpectedInstances:
           continue
 
       wasRun = [r["id"] for r in runreport if r["id"] == id]
 
-      if not options["overwrite"] and wasRun and id != options["instance"]:
+      if wasRun and not options["overwrite"]:
           if not options["quiet"]:
               print '{0}/{1} {2} skipping {3}'.format(i, n, id, cfgDetails)
           continue
