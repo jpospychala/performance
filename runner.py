@@ -19,6 +19,7 @@ def main(argv):
     "instance": None
   }
   configFileName = 'config.json'
+  logPath = '~/.runner.log'
 
   try:
     opts, args = getopt.getopt(argv, "hbovqdc:i:", ["help", "build", "overwrite", "verbose", "quite", "dryrun", "config", "instance"])
@@ -58,8 +59,9 @@ def main(argv):
   except:
     report = []
 
+  logFile = open(os.path.expanduser(logPath), 'w+')
   # TODO continue moving args into map
-  process(configFile, report, options)
+  process(configFile, report, logFile, options)
 
 def usage():
   print "runner.py [-hadv] [-c config_file] [config]"
@@ -72,7 +74,7 @@ def usage():
   print "-q --quiet    quiet"
 
 
-def process(configFile, runreport, options):
+def process(configFile, runreport, logFile, options):
   info = sysinfo()
   for name, config in configFile.items():
     if options["configName"] and name != options["configName"]:
@@ -121,10 +123,16 @@ def process(configFile, runreport, options):
 
       if actuallyRanVariant == 0:
         if options["doBuild"] and "build" in config:
-          subprocess.call(config["build"], cwd=config.get("workdir"))
+          ret = subprocess.call(config["build"], cwd=config.get("workdir"), stdout=logFile, stderr=logFile)
+          if ret != 0:
+            print 'build failed. Command: {0}'.format(config["build"])
+            break
 
         if "before" in config:
-          subprocess.call(config["before"], cwd=config.get("workdir"))
+          ret = subprocess.call(config["before"], cwd=config.get("workdir"), stdout=logFile, stderr=logFile)
+          if ret != 0:
+            print 'before step failed. Command: {0}'.format(config["before"])
+            break
 
       actuallyRanVariant += 1
       logpaths = run(variant, id, options["verbose"])
@@ -137,8 +145,10 @@ def process(configFile, runreport, options):
         with open('results/index.json', 'w') as f:
           json.dump(runreport, f)
 
-    if actuallyRanVariant > 0 and not options["dryRun"] and "before" in config:
-      subprocess.call(config["before"], cwd=config.get("workdir"))
+    if actuallyRanVariant > 0 and not options["dryRun"] and "after" in config:
+      ret = subprocess.call(config["after"], cwd=config.get("workdir"), stdout=logFile, stderr=logFile)
+      if ret != 0:
+        print 'after step failed. Command: {0}'.format(config["after"])
 
 
 def run(config, id, verbose):
