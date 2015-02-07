@@ -44,13 +44,13 @@ def main(argv):
       configFileName = arg
     if opt in ("-i", "--instance"):
       if len(arg) > 0 and arg[0] == '@':
-        with open(arg[1:], 'r') as f:
+        with open(os.path.expanduser(arg[1:]), 'r') as f:
           options["instances"] = [line.strip() for line in f]
       else:
         options["instances"] = [arg]
 
   options["configName"] = args and args.pop(0)
-  with open(configFileName, 'r') as f:
+  with open(os.path.expanduser(configFileName), 'r') as f:
     configFile = json.load(f)
 
   try:
@@ -62,6 +62,7 @@ def main(argv):
   logFile = open(os.path.expanduser(logPath), 'w+')
   # TODO continue moving args into map
   process(configFile, report, logFile, options)
+  logFile.close()
 
 def usage():
   print "runner.py [-hadv] [-c config_file] [config]"
