@@ -48,21 +48,36 @@ function CREATE_DROPLET {
     "image":"ubuntu-14-04-x64",
     "ssh_keys":$SSHKEYS}
 EOF`
-  $CURL -X POST -d "$CREATECONTAINER" "$DOHOME/droplets/"
+  $CURL -X POST -d "$CREATECONTAINER" "$DOHOME/droplets/" >/dev/null
 }
 
 case "$CMD" in
   "parallel")
   rm -rf .inqueue*
-  ./runner.py -q -d sleep_node | sort | uniq > .inqueue
-  RUNNERS=1
+  ./runner.py -q -d | sort | uniq > .inqueue
+  RUNNERS=2
+  CHUNKS=1000
   LINES=$(cat .inqueue | wc -l)
-  ((LINES_PER_RUNNER = (LINES + RUNNERS - 1) / RUNNERS))
+  ((LINES_PER_CHUNK = (LINES + CHUNKS - 1) / CHUNKS))
 
-  split -l $LINES_PER_RUNNER .inqueue .inqueue.
-  for i in .inqueue.*; do
-    echo run $i
-    ./digitalocean.sh run droplet$i "" 512mb $i | tee $i.log &
+  split -l $LINES_PER_CHUNK .inqueue .inqueue.
+  for i in `seq $RUNNERS`; do
+    ./digitalocean.sh parallelrunner droplet$i > $i.log 2>&1 &
+    sleep 1
+  done
+  ;;
+
+  "parallelrunner")
+  while find .inqueue.?? >/dev/null 2>&1; do
+    CHUNK=`find .inqueue.?? | head -1`
+    mv $CHUNK $CHUNK.$DROPLETNAME
+    echo processing $CHUNK.$DROPLETNAME
+    ./digitalocean.sh run $DROPLETNAME '' 512mb $CHUNK.$DROPLETNAME
+    if [ ! -e "$CHUNK.$DROPLETNAME.tar.gz" ]; then
+      mv $CHUNK.$DROPLETNAME $CHUNK
+    else
+      rm $CHUNK.$DROPLETNAME 
+    fi
   done
   ;;
 
@@ -78,19 +93,40 @@ case "$CMD" in
       GET_DROPLET
     done
   fi
-
-  # execute
+  FILESDIR=filedirs/$$
+  mkdir -p $FILESDIR
+  cat run.sh | sed "s/#EXTRAARG/$EXTRAARGS/;s/LABEL/digitalocean$SIZE/" > $FILESDIR/run.sh
   if [ -e results/index.json ]; then
-    scp -oStrictHostKeyChecking=no results/index.json "root@$IP:/root/index.json"
+    cp results/index.json $FILESDIR/
   fi
+  OUTFILE=$ID.tar.gz
   if [ -e "$CFGSTORUN" ]; then
-    scp -oStrictHostKeyChecking=no $CFGSTORUN "root@$IP:/root/cfgstorun.txt"
+    OUTFILE=$CFGSTORUN.tar.gz
+    cp "$CFGSTORUN" $FILESDIR/cfgstorun.txt
   fi
-  cat run.sh | sed "s/#EXTRAARG/$EXTRAARGS/;s/digitalocean512/digitalocean$SIZE/" | ssh -oStrictHostKeyChecking=no "root@$IP" 'bash -s'
-  scp -r -oStrictHostKeyChecking=no "root@$IP:/root/performance/results.tar.gz" $ID.tar.gz
-  tar -zxvf $ID.tar.gz
-  #./digitalocean.sh stop "$DROPLETNAME"
-  #./report.py results
+  echo copy files
+  while ! rsync -ace "ssh -q -oStrictHostKeyChecking=no" $FILESDIR/* "root@$IP:/root"; do
+    sleep 5;
+  done
+  rm -rf $$/
+
+  echo executing
+  ssh -q -oStrictHostKeyChecking=no "root@$IP" 'bash /root/run.sh'
+  echo fetching results
+  scp -q -oStrictHostKeyChecking=no "root@$IP:/root/performance/results.tar.gz" $OUTFILE
+  ;;
+
+  "stopall")
+  for i in .inqueue.??; do
+    ./digitalocean.sh stop droplet$i
+  done
+  ;;
+
+  "clear")
+  rm -rf filedirs
+  rm -rf .inqueue*
+  rm -rf .curlargs*
+  rm -rf *.log
   ;;
 
   "status")
@@ -108,6 +144,7 @@ case "$CMD" in
   ;;
 
   "stop")
+  echo stopping $DROPLETNAME
   GET_DROPLET
   $CURL -X DELETE "$DOHOME/droplets/$ID"
   ;;
@@ -117,4 +154,4 @@ case "$CMD" in
   ;;
 esac
 
-rm .curlargs.$$
+rm -rf .curlargs.$$
