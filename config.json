@@ -6,6 +6,7 @@
       "producer": {"cmd": ["node", "producer.js"]},
       "monitor": {"cmd": ["node", "../monitor/monitor.js"], "kill": true}
     },
+    "wait_for_port": 5672,
     "build": ["make", "rabbit_docker_image"],
     "before": ["make", "startdocker"],
     "after": ["make", "stopdocker"],
@@ -33,6 +34,7 @@
       "producer": {"cmd": ["java", "-cp", "target/deps/amqp-client-3.3.5.jar:target/rabbits-0.0.1-SNAPSHOT.jar", "Producer"]},
       "monitor": {"cmd": ["node", "../../monitor/monitor.js"], "kill": true}
     },
+    "wait_for_port": 5672,
     "before": ["make", "startdocker"],
     "after": ["make", "stopdocker"],
     "options": {

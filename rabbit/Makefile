@@ -7,7 +7,6 @@ endif
 
 startdocker:
 	docker start rabbit_docker
-	sleep 10
 
 stopdocker:
 	docker stop rabbit_docker
@@ -15,6 +14,5 @@ stopdocker:
 rabbit_docker_image_build:
 	docker build -t rabbit_docker docker
 	docker run -d -p 5672:5672 -p 15672:15672 --name rabbit_docker rabbit_docker
-	sleep 10
 
 .PHONY: rabbit_docker_image rabbit_docker_image_build

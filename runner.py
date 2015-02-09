@@ -8,6 +8,7 @@ import subprocess
 import re
 import md5
 import time
+import socket
 
 def main(argv):
   options = {
@@ -162,6 +163,8 @@ def run(config, id, verbose):
   cwd = config.get("workdir")
   if "beforeEach" in config:
     subprocess.call(config["beforeEach"], cwd=cwd)
+  if "wait_for_port" in config:
+    wait_for_port(int(config["wait_for_port"]))
   for taskName, t in config["tasks"].items():
     logpath = logdir + taskName + '.log'
     logPaths[taskName] = logpath
@@ -254,6 +257,15 @@ def sysinfo():
       out['oslabel'] = oslabel
   return out
 
+
+def wait_for_port(port):
+    port_is_open = False
+    while not port_is_open:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        result = sock.connect_ex(('localhost',port))
+        port_is_open = result == 0
+        time.sleep(1)
+    return port_is_open
 
 if __name__ == "__main__":
   main(sys.argv[1:])
