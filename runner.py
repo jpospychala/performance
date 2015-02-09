@@ -126,21 +126,15 @@ def process(configFile, runreport, logFile, options):
         if options["doBuild"] and "build" in config:
           ret = subprocess.call(config["build"], cwd=config.get("workdir"), stdout=logFile, stderr=logFile)
           if ret != 0:
-            print 'build failed. Command: {0}'.format(config["build"])
-            break
+            raise RuntimeError('build failed. Command: {0}'.format(config["build"]))
 
         if "before" in config:
           ret = subprocess.call(config["before"], cwd=config.get("workdir"), stdout=logFile, stderr=logFile)
           if ret != 0:
-            print 'before step failed. Command: {0}'.format(config["before"])
-            break
+            raise RuntimeError('before step failed. Command: {0}'.format(config["before"]))
 
       actuallyRanVariant += 1
-      try:
-          logpaths = run(variant, id, options["verbose"])
-      except RuntimeError as rex:
-          print 'run failed. Skipping. Error: {0}'.format(rex.message)
-          continue
+      logpaths = run(variant, id, options["verbose"])
 
       for task, path in logpaths.items():
         params = variant["config"].copy()
@@ -154,7 +148,7 @@ def process(configFile, runreport, logFile, options):
     if actuallyRanVariant > 0 and not options["dryRun"] and "after" in config:
       ret = subprocess.call(config["after"], cwd=config.get("workdir"), stdout=logFile, stderr=logFile)
       if ret != 0:
-        print 'after step failed. Command: {0}'.format(config["after"])
+        raise RuntimeError('after step failed. Command: {0}'.format(config["after"]))
 
 
 def run(config, id, verbose):
@@ -188,7 +182,7 @@ def run(config, id, verbose):
     if ret != 0:
         raise RuntimeError('process returned {0}'.format(ret))
   for p in processesToKill:
-      p.terminate()
+      p.kill()
   for logFile in logFiles:
     logFile.close()
   if "afterEach" in config:
