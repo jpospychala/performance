@@ -264,7 +264,7 @@ def wait_for_port(port):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         result = sock.connect_ex(('localhost',port))
         port_is_open = result == 0
-        time.sleep(1)
+        time.sleep(3)
     return port_is_open
 
 if __name__ == "__main__":
