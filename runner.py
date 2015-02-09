@@ -59,7 +59,7 @@ def main(argv):
   except:
     report = []
 
-  logFile = open(os.path.expanduser(logPath), 'w+')
+  logFile = open(os.path.expanduser(logPath), 'a+')
   # TODO continue moving args into map
   process(configFile, report, logFile, options)
   logFile.close()
