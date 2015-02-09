@@ -46,4 +46,7 @@ amqp.connect('amqp://localhost').then(function(conn) {
       }, {noAck: config.autoAck});
     });
   });
-}).then(null, console.warn);
+}).then(null, , function(err) {
+  console.warn('producer err', err);
+  process.exit(1);
+});

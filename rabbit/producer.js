@@ -36,7 +36,10 @@ function start() {
           });
         });
       })).ensure(function() { conn.close(); });;
-    }).then(null, console.warn);
+    }).then(null, function(err) {
+      console.warn('producer err', err);
+      process.exit(1);
+    });
 };
 
 function setIntOrNow(fn, delay) {

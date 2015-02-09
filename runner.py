@@ -136,7 +136,12 @@ def process(configFile, runreport, logFile, options):
             break
 
       actuallyRanVariant += 1
-      logpaths = run(variant, id, options["verbose"])
+      try:
+          logpaths = run(variant, id, options["verbose"])
+      except RuntimeError as rex:
+          print 'run failed. Skipping. Error: {0}'.format(rex.message)
+          continue
+
       for task, path in logpaths.items():
         params = variant["config"].copy()
         params.update({"task": task})
@@ -179,7 +184,9 @@ def run(config, id, verbose):
       p = subprocess.Popen(t["cmd"] + params(config), stdout=logPathF, cwd=cwd)
       processesList.append(p)
   for p in processesToWait:
-    p.wait()
+    ret = p.wait()
+    if ret != 0:
+        raise RuntimeError('process returned {0}'.format(ret))
   for p in processesToKill:
       p.terminate()
   for logFile in logFiles:
