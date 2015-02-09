@@ -108,8 +108,14 @@ case "$CMD" in
     cp "$CFGSTORUN" $FILESDIR/cfgstorun.txt
   fi
   echo copy files
+  TRIES=''
   while ! rsync -ace "ssh -q -oStrictHostKeyChecking=no" $FILESDIR/* "root@$IP:/root"; do
     sleep 5;
+    TRIES='${TRIES}X'
+    if [ "$TRIES" == 'XXX' ]; then
+      echo rsync tries ran out
+      exit
+    fi
   done
   rm -rf $$/
 
