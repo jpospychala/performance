@@ -43,7 +43,7 @@ public class Consumer {
     	  start = now;
     	  last = now;
       }
-      System.out.println((now-start)+","+(now-then)+","+(now-last));
+      System.out.print((now-start)+","+(now-then)+","+(now-last)+"\n");
       last = now;
 
       if (msgAckDelay > 0) {

@@ -39,7 +39,7 @@ public class Producer {
     for (int i = 0; i < msgsToSend; i++) {
         long now = System.currentTimeMillis();
         channel.basicPublish("", queueName, msgProperties, Long.toString(now).getBytes());
-        System.out.println((now-start));
+        System.out.print((now-start)+"\n");
         Thread.sleep(msgSendDelay);
     }
 
