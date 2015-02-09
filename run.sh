@@ -25,7 +25,7 @@ if [ -e performance ]; then
 else
   git clone https://github.com/jpospychala/performance.git
   cd performance
-  npm install
+  npm install >> $LOG 2>&1
 fi
 
 rm -rf results

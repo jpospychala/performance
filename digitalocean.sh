@@ -55,8 +55,8 @@ case "$CMD" in
   "parallel")
   rm -rf .inqueue*
   ./runner.py -q -d | sort | uniq > .inqueue
-  RUNNERS=2
-  CHUNKS=1000
+  RUNNERS=20
+  CHUNKS=400
   LINES=$(cat .inqueue | wc -l)
   ((LINES_PER_CHUNK = (LINES + CHUNKS - 1) / CHUNKS))
 
@@ -76,9 +76,10 @@ case "$CMD" in
     if [ ! -e "$CHUNK.$DROPLETNAME.tar.gz" ]; then
       mv $CHUNK.$DROPLETNAME $CHUNK
     else
-      rm $CHUNK.$DROPLETNAME 
+      rm $CHUNK.$DROPLETNAME
     fi
   done
+  ./digitalocean.sh stop $DROPLETNAME
   ;;
 
   "run")
@@ -129,6 +130,14 @@ case "$CMD" in
   rm -rf *.log
   ;;
 
+  "report")
+  for i in .*.tar.gz; do
+    echo $i
+    tar -zxf $i
+    ./report.py results
+  done
+  ;;
+
   "status")
   GET_DROPLET
   if [ -z "$IP" ]; then
@@ -150,7 +159,7 @@ case "$CMD" in
   ;;
 
   *)
-  echo "Unknown command $1"
+  echo "Unknown command $CMD"
   ;;
 esac
 
