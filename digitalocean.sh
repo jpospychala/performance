@@ -74,7 +74,9 @@ case "$CMD" in
     echo processing $CHUNK.$DROPLETNAME
     ./digitalocean.sh run $DROPLETNAME '' 512mb $CHUNK.$DROPLETNAME
     if [ ! -e "$CHUNK.$DROPLETNAME.tar.gz" ]; then
+      echo "processing $CHUNK.$DROPLETNAME failed. taking down failing node"
       mv $CHUNK.$DROPLETNAME $CHUNK
+      ./digitalocean.sh stop $DROPLETNAME
     else
       rm $CHUNK.$DROPLETNAME
     fi
