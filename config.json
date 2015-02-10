@@ -10,6 +10,7 @@
     "build": ["make", "rabbit_docker_image"],
     "before": ["make", "startdocker"],
     "after": ["make", "stopdocker"],
+    "afterEach": ["node", "reset.js"],
     "options": {
       "n": [1],
       "producerThreads": [1, 2, 4, 8],
@@ -37,6 +38,7 @@
     "wait_for_port": 5672,
     "before": ["make", "startdocker"],
     "after": ["make", "stopdocker"],
+    "afterEach": ["node", "../reset.js"],
     "options": {
       "n": [1],
       "producerThreads": [1, 2, 4, 8],
