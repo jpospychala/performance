@@ -5,7 +5,6 @@ set -e # fail fast
 set -x # extra verbose
 if [ ! -e ~/.perflabel ]; then
   locale-gen en_US
-  dpkg-reconfigure locales
   apt-get update >> $LOG 2>&1
   apt-get -y install python-software-properties >> $LOG 2>&1
   add-apt-repository -y ppa:webupd8team/java >> $LOG 2>&1
