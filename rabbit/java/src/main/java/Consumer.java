@@ -19,7 +19,7 @@ public class Consumer {
     int prefetchCount = Integer.parseInt(params.get("prefetchCount"));
     boolean autoAck = Boolean.parseBoolean(params.get("autoAck"));
 
-    System.out.println("time (ms),latency (ms),consume (ms)");
+    System.out.print("time (ms),latency (ms),consume (ms)\n");
 
     ConnectionFactory factory = new ConnectionFactory();
     factory.setHost("localhost");
