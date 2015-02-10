@@ -162,7 +162,9 @@ def run(config, id, verbose):
     os.makedirs(logdir)
   cwd = config.get("workdir")
   if "beforeEach" in config:
-    subprocess.call(config["beforeEach"] + params(config), cwd=cwd)
+    ret = subprocess.call(config["beforeEach"] + params(config), cwd=cwd)
+    if ret != 0:
+      raise RuntimeError('beforeEach step failed. Command: {0}'.format(config["beforeEach"]))
   if "wait_for_port" in config:
     wait_for_port(int(config["wait_for_port"]))
   for taskName, t in config["tasks"].items():
@@ -189,7 +191,9 @@ def run(config, id, verbose):
   for logFile in logFiles:
     logFile.close()
   if "afterEach" in config:
-    subprocess.call(config["afterEach"] + params(config), cwd=cwd)
+    ret = subprocess.call(config["afterEach"] + params(config), cwd=cwd)
+    if ret != 0:
+      raise RuntimeError('afterEach step failed. Command: {0}'.format(config["afterEach"]))
   return logPaths
 
 
