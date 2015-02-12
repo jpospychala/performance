@@ -16,14 +16,14 @@
       "producerThreads": [1, 2, 4, 8],
       "consumerThreads": [1],
       "msgsToSend": [10000],
-      "msgSendDelay": [0, 1, 5, 10],
+      "msgSendDelay": [0, 1, 10],
       "msgAckDelay": [0],
       "deliveryMode": [1, 2],
       "queue": ["q2"],
       "queueDurable": [false, true],
       "autoAck": [true, false],
       "prefetchCount": [0, 1],
-      "msgSize": [13, 26, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
+      "msgSize": [13, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
     }
   },
   "rabbitmq_java": {
@@ -44,14 +44,14 @@
       "producerThreads": [1, 2, 4, 8],
       "consumerThreads": [1],
       "msgsToSend": [10000],
-      "msgSendDelay": [0, 1, 5, 10],
+      "msgSendDelay": [0, 1, 10],
       "msgAckDelay": [0],
       "deliveryMode": [1, 2],
       "queue": ["q2"],
       "queueDurable": [false, true],
       "autoAck": [true, false],
       "prefetchCount": [0, 1],
-      "msgSize": [13, 26, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
+      "msgSize": [13, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
     }
   },
   "zeromq_nodejs": {
@@ -64,14 +64,14 @@
     "options": {
       "n": [1],
       "msgsToSend": [10000],
-      "msgSendDelay": [0, 1, 5, 10],
+      "msgSendDelay": [0, 1, 10],
       "msgAckDelay": [0],
       "deliveryMode": [1],
       "queue": ["q2"],
       "queueDurable": [false],
       "autoAck": [true],
       "prefetchCount": [0],
-      "msgSize": [13, 26, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
+      "msgSize": [13, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536]
     }
   },
   "sleep_node": {
