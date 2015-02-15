@@ -74,9 +74,8 @@ case "$CMD" in
     echo processing $CHUNK.$DROPLETNAME
     ./digitalocean.sh run $DROPLETNAME '' 512mb $CHUNK.$DROPLETNAME
     if [ ! -e "$CHUNK.$DROPLETNAME.tar.gz" ]; then
-      echo "processing $CHUNK.$DROPLETNAME failed. taking down failing node"
+      echo "processing $CHUNK.$DROPLETNAME failed."
       mv $CHUNK.$DROPLETNAME $CHUNK
-      ./digitalocean.sh stop $DROPLETNAME
     else
       rm $CHUNK.$DROPLETNAME
     fi
@@ -110,14 +109,14 @@ case "$CMD" in
   echo copy files
   TRIES=''
   while ! rsync -ace "ssh -q -oStrictHostKeyChecking=no" $FILESDIR/* "root@$IP:/root"; do
-    sleep 5;
+    sleep 20
     TRIES='${TRIES}X'
-    if [ "$TRIES" == 'XXX' ]; then
+    if [ "${#TRIES}" -gt 5 ]; then
       echo rsync tries ran out
       exit
     fi
   done
-  rm -rf $$/
+  rm -rf $FILESDIR
 
   echo executing
   ssh -q -oStrictHostKeyChecking=no "root@$IP" 'bash /root/run.sh'
@@ -126,7 +125,7 @@ case "$CMD" in
   ;;
 
   "stopall")
-  for i in .inqueue.??; do
+  for i in `seq 1 20`; do
     ./digitalocean.sh stop droplet$i
   done
   ;;
