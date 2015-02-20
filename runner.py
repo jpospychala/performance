@@ -5,10 +5,14 @@ import sys
 import getopt
 import json
 import subprocess
+import signal
+import socket
 import re
 import md5
 import time
-import socket
+import bottle
+
+runner = None
 
 def main(argv):
   options = {
@@ -17,13 +21,14 @@ def main(argv):
     "dryRun": False,
     "doBuild": False,
     "quiet": False,
-    "instance": None
+    "instance": None,
+    "port": None
   }
   configFileName = 'config.json'
   logPath = '~/.runner.log'
 
   try:
-    opts, args = getopt.getopt(argv, "hbovqdc:i:", ["help", "build", "overwrite", "verbose", "quite", "dryrun", "config", "instance"])
+    opts, args = getopt.getopt(argv, "hbovqdc:i:p:", ["help", "build", "overwrite", "verbose", "quite", "dryrun", "config", "instance", "port"])
   except getopt.GetoptError:
     usage()
     sys.exit(2)
@@ -43,12 +48,15 @@ def main(argv):
       options["dryRun"] = True
     if opt in ("-c", "--config"):
       configFileName = arg
+    if opt in ("-p", "--port"):
+      options["port"] = int(arg)
     if opt in ("-i", "--instance"):
       if len(arg) > 0 and arg[0] == '@':
         with open(os.path.expanduser(arg[1:]), 'r') as f:
           options["instances"] = [line.strip() for line in f]
       else:
         options["instances"] = [arg]
+
 
   options["configName"] = args and args.pop(0)
   with open(os.path.expanduser(configFileName), 'r') as f:
@@ -61,95 +69,163 @@ def main(argv):
     report = []
 
   logFile = open(os.path.expanduser(logPath), 'a+')
-  # TODO continue moving args into map
-  process(configFile, report, logFile, options)
+  global runner
+  runner = Runner(configFile, report, logFile, options)
+  if options["port"]:
+    daemon(options["port"])
+  else:
+    runner.process()
   logFile.close()
 
+
 def usage():
-  print "runner.py [-hadv] [-c config_file] [config]"
+  print "runner.py [-hadv] [-c config_file] [-i instance] [-D port] [config]"
   print "-a --append     append results rather than overwrite"
   print "-b --build      run build step if configured"
   print "-c config_file  configuration file, default: config.json"
   print "-d --dryrun     don't actually run anything"
+  print "-i instance     run specific instance or list of configs if instance starts with @"
+  print "-p --port port  listen for commands on port"
   print "-h              print this information"
   print "-v --verbose    verbose"
-  print "-q --quiet    quiet"
+  print "-q --quiet      quiet"
 
 
-def process(configFile, runreport, logFile, options):
-  info = sysinfo()
-  for name, config in configFile.items():
-    if options["configName"] and name != options["configName"]:
-      continue
+def daemon(port):
+    bottle.run(host='localhost', port=port)
 
-    if not options["quiet"]:
-      print name
 
-    allVariants = []
-    optionsKeys = config['options'].keys()
-    config['options'].update({'config_name': name})
-    config['options'].update(info)
-    variantsList = variants(config['options'])
-    for variant in variantsList:
-      c = config.copy()
-      c.update({"config": variant})
-      allVariants.append(c)
+@bottle.get('/ping')
+def daemon_ping():
+    bottle.response.content_type = 'application/json'
+    return json.dumps(sysinfo())
 
-    actuallyRanVariant = 0
-    i = 0;
-    n = len(allVariants)
-    for variant in allVariants:
-      i += 1
-      id = createId(variant)
-      cfgDetails = json.dumps(pick(optionsKeys, variant["config"]), sort_keys=True)
 
-      isOneOfExpectedInstances = "instances" not in options or id in options["instances"] or cfgDetails in options["instances"]
-      if not isOneOfExpectedInstances:
-          continue
+@bottle.get('/run')
+def daemon_run():
+    bottle.response.content_type = 'application/json'
+    return json.dumps({"message": "bzz"})
 
-      wasRun = [r["id"] for r in runreport if r["id"] == id]
 
-      if wasRun and not options["overwrite"]:
-          if not options["quiet"]:
-              print '{0}/{1} {2} skipping {3}'.format(i, n, id, cfgDetails)
-          continue
+@bottle.route('/close')
+def daemon_close():
+    print "shutting down"
+    os.kill(os.getpid(), signal.SIGTERM)
 
-      if options["quiet"]:
-        print '{0}'.format(cfgDetails)
-      else:
-        print '{0}/{1} {2} executing {3}'.format(i, n, id, cfgDetails)
-      sys.stdout.flush()
 
-      if options["dryRun"]:
-        continue
+class Runner:
 
-      if actuallyRanVariant == 0:
-        if options["doBuild"] and "build" in config:
-          ret = subprocess.call(config["build"], cwd=config.get("workdir"), stdout=logFile, stderr=logFile)
+    def __init__(self, configFile, runreport, logFile, options):
+        self.configFile = configFile
+        self.runreport = runreport
+        self.logFile = logFile
+        self.options = options
+        self.built = []
+        self.lastRanConfig = None
+
+
+    def build(self, config):
+        if config['options']['config_name'] in self.built:
+            return
+        self.built.append(config['options']['config_name'])
+        if self.options["doBuild"] and "build" in config:
+            ret = subprocess.call(config["build"], cwd=config.get("workdir"), stdout=self.logFile, stderr=self.logFile)
+            if ret != 0:
+                raise RuntimeError('build failed. Command: {0}'.format(config["build"]))
+
+
+    def beforeAll(self, config):
+        if config['options']['config_name'] == self.lastRanConfig:
+            return
+        self.lastRanConfig = config['options']['config_name']
+        if not self.options["dryRun"] and "before" in config:
+            ret = subprocess.call(config["before"], cwd=config.get("workdir"), stdout=self.logFile, stderr=self.logFile)
+            if ret != 0:
+                raise RuntimeError('before step failed. Command: {0}'.format(config["before"]))
+
+
+    def afterAll(self, config, next):
+        if next is not None and next['options']['config_name'] == self.lastRanConfig:
+            return
+        self.lastRanConfig = None
+        if not self.options["dryRun"] and "after" in config:
+          ret = subprocess.call(config["after"], cwd=config.get("workdir"), stdout=self.logFile, stderr=self.logFile)
           if ret != 0:
-            raise RuntimeError('build failed. Command: {0}'.format(config["build"]))
+            raise RuntimeError('after step failed. Command: {0}'.format(config["after"]))
 
-        if "before" in config:
-          ret = subprocess.call(config["before"], cwd=config.get("workdir"), stdout=logFile, stderr=logFile)
-          if ret != 0:
-            raise RuntimeError('before step failed. Command: {0}'.format(config["before"]))
 
-      actuallyRanVariant += 1
-      logpaths = run(variant, id, options["verbose"])
+    def log(self, message):
+        if self.options["quiet"]:
+            return
+        print message
+        sys.stdout.flush()
 
-      for task, path in logpaths.items():
-        params = variant["config"].copy()
-        params.update({"task": task})
-        runreport.append({"id": id, "params": params})
 
-        # update report file continuously
-        with open('results/index.json', 'w') as f:
-          json.dump(runreport, f)
+    def variants(self):
+        allVariants = []
+        info = sysinfo()
+        for name, config in self.configFile.items():
+            if self.options["configName"] and name != self.options["configName"]:
+                continue
 
-    if actuallyRanVariant > 0 and not options["dryRun"] and "after" in config:
-      ret = subprocess.call(config["after"], cwd=config.get("workdir"), stdout=logFile, stderr=logFile)
-      if ret != 0:
-        raise RuntimeError('after step failed. Command: {0}'.format(config["after"]))
+            self.log(name)
+
+            config['options'].update({'config_name': name})
+            config['options'].update(info)
+            variantsList = variants(config['options'])
+            for variant in variantsList:
+                c = config.copy()
+                c.update({"config": variant})
+                allVariants.append(c)
+        return allVariants
+
+
+    def process(self):
+      allVariants = self.variants()
+      i = 0;
+      n = len(allVariants)
+      for variant in allVariants:
+          i += 1
+          id = createId(variant)
+
+          cfgDetails = json.dumps(pickOptionsKeys(variant["config"]), sort_keys=True)
+
+          isOneOfExpectedInstances = "instances" not in self.options or id in self.options["instances"] or cfgDetails in self.options["instances"]
+          if not isOneOfExpectedInstances:
+              continue
+
+          wasRun = [r["id"] for r in self.runreport if r["id"] == id]
+
+          if wasRun and not self.options["overwrite"]:
+              self.log('{0}/{1} {2} skipping {3}'.format(i, n, id, cfgDetails))
+              continue
+
+          if self.options["quiet"]:
+            print '{0}'.format(cfgDetails)
+          else:
+            self.log('{0}/{1} {2} executing {3}'.format(i, n, id, cfgDetails))
+
+          if self.options["dryRun"]:
+            continue
+
+          self.build(variant)
+          self.beforeAll(variant)
+
+          logpaths = run(variant, id, self.options["verbose"])
+
+          for task, path in logpaths.items():
+            params = variant["config"].copy()
+            params.update({"task": task})
+            self.runreport.append({"id": id, "params": params})
+
+            # update report file continuously
+            with open('results/index.json', 'w') as f:
+              json.dump(self.runreport, f)
+
+          if i < n:
+              self.afterAll(variant, allVariants[i])
+          else:
+              self.afterAll(variant, None)
 
 
 def run(config, id, verbose):
@@ -228,8 +304,9 @@ def variants(dict):
   return results
 
 
-def pick(keys, obj):
-  return { key: obj[key] for key in keys }
+def pickOptionsKeys(obj):
+    blackList = ["config_name", "cpu cores", "MemTotal", "model name", "oslabel"]
+    return { key: obj[key] for key in obj.keys() if key not in blackList }
 
 def read_procfile(path):
   out = {}
