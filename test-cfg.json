@@ -1,0 +1,24 @@
+{
+  "sleep_node": {
+    "workdir": "sleep",
+    "tasks": {
+      "sleep": {"cmd": ["node", "./count.js"]}
+    },
+    "options": {
+      "n": [2, 1],
+      "time": [0, 5, 10, 50, 100]
+    }
+  },
+  "sleep_c": {
+    "workdir": "./sleep/c",
+    "params_style": "key_value",
+    "build": ["gcc", "sleep.c", "-o", "sleep"],
+    "tasks": {
+      "sleep": {"cmd": ["./sleep"]}
+    },
+    "options": {
+      "n": [2, 10],
+      "time": [0, 5, 10, 50]
+    }
+  }
+}
