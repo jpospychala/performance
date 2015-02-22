@@ -74,7 +74,7 @@ def main(argv):
   if options["port"]:
     daemon(options["port"])
   else:
-    runner.process()
+    runner.processAll()
   logFile.close()
 
 
@@ -101,15 +101,25 @@ def daemon_ping():
     return json.dumps(sysinfo())
 
 
-@bottle.get('/run')
+@bottle.post('/run')
 def daemon_run():
     bottle.response.content_type = 'application/json'
-    return json.dumps({"message": "bzz"})
+    cfg = bottle.request.json
+    result = runner.process(cfg)
+    return json.dumps({"result": result})
+
+
+@bottle.get('/variants')
+def daemon_run():
+    bottle.response.content_type = 'application/json'
+    variants = runner.variants()
+    return json.dumps(variants)
 
 
 @bottle.route('/close')
 def daemon_close():
     print "shutting down"
+    runner.afterAll()
     os.kill(os.getpid(), signal.SIGTERM)
 
 
@@ -122,12 +132,13 @@ class Runner:
         self.options = options
         self.built = []
         self.lastRanConfig = None
+        self.info = sysinfo()
 
 
     def build(self, config):
-        if config['options']['config_name'] in self.built:
+        if config['config']['@config'] in self.built:
             return
-        self.built.append(config['options']['config_name'])
+        self.built.append(config['config']['@config'])
         if self.options["doBuild"] and "build" in config:
             ret = subprocess.call(config["build"], cwd=config.get("workdir"), stdout=self.logFile, stderr=self.logFile)
             if ret != 0:
@@ -135,23 +146,40 @@ class Runner:
 
 
     def beforeAll(self, config):
-        if config['options']['config_name'] == self.lastRanConfig:
+        if self.lastRanConfig is not None and config['config']['@config'] == self.lastRanConfig['config']['@config']:
             return
-        self.lastRanConfig = config['options']['config_name']
+        self.lastRanConfig = config
         if not self.options["dryRun"] and "before" in config:
             ret = subprocess.call(config["before"], cwd=config.get("workdir"), stdout=self.logFile, stderr=self.logFile)
             if ret != 0:
                 raise RuntimeError('before step failed. Command: {0}'.format(config["before"]))
 
 
-    def afterAll(self, config, next):
-        if next is not None and next['options']['config_name'] == self.lastRanConfig:
+    def afterAll(self, next=None):
+        if self.lastRanConfig is None:
             return
-        self.lastRanConfig = None
-        if not self.options["dryRun"] and "after" in config:
-          ret = subprocess.call(config["after"], cwd=config.get("workdir"), stdout=self.logFile, stderr=self.logFile)
-          if ret != 0:
-            raise RuntimeError('after step failed. Command: {0}'.format(config["after"]))
+        if next is not None and next['config']['@config'] == self.lastRanConfig['config']['@config']:
+            return
+        if not self.options["dryRun"] and "after" in self.lastRanConfig:
+            ret = subprocess.call(self.lastRanConfig["after"], cwd=self.lastRanConfig.get("workdir"), stdout=self.logFile, stderr=self.logFile)
+            if ret != 0:
+                raise RuntimeError('after step failed. Command: {0}'.format(self.lastRanConfig["after"]))
+
+
+    def beforeEach(self, config):
+        if "beforeEach" in config:
+            cwd = config.get("workdir")
+            ret = subprocess.call(config["beforeEach"] + [json.dumps(config["config"])], cwd=cwd)
+            if ret != 0:
+                raise RuntimeError('beforeEach step failed. Command: {0}'.format(config["beforeEach"]))
+
+
+    def afterEach(self, config):
+        if "afterEach" in config:
+            cwd = config.get("workdir")
+            ret = subprocess.call(config["afterEach"] + [json.dumps(config["config"])], cwd=cwd)
+            if ret != 0:
+                raise RuntimeError('afterEach step failed. Command: {0}'.format(config["afterEach"]))
 
 
     def log(self, message):
@@ -163,114 +191,105 @@ class Runner:
 
     def variants(self):
         allVariants = []
-        info = sysinfo()
         for name, config in self.configFile.items():
             if self.options["configName"] and name != self.options["configName"]:
                 continue
 
-            self.log(name)
-
-            config['options'].update({'config_name': name})
-            config['options'].update(info)
+            config['options'].update({'@config': name, 'oslabel': self.info['oslabel']})
             variantsList = variants(config['options'])
-            for variant in variantsList:
-                c = config.copy()
-                c.update({"config": variant})
-                allVariants.append(c)
+
+            if "instances" in self.options:
+                for variant in variantsList:
+                    if variant in self.options["instances"]:
+                        allVariants.append(variant)
+            else:
+                allVariants.extend(variantsList)
         return allVariants
 
 
-    def process(self):
+    def completeVariant(self, variant):
+        cfgName = variant['@config']
+        config = self.configFile[cfgName]
+        c = config.copy()
+        c.update({"config": variant})
+        c['config'].update(self.info)
+        return c
+
+
+    def processAll(self):
       allVariants = self.variants()
-      i = 0;
       n = len(allVariants)
-      for variant in allVariants:
-          i += 1
-          id = createId(variant)
-
-          cfgDetails = json.dumps(pickOptionsKeys(variant["config"]), sort_keys=True)
-
-          isOneOfExpectedInstances = "instances" not in self.options or id in self.options["instances"] or cfgDetails in self.options["instances"]
-          if not isOneOfExpectedInstances:
-              continue
-
-          wasRun = [r["id"] for r in self.runreport if r["id"] == id]
-
-          if wasRun and not self.options["overwrite"]:
-              self.log('{0}/{1} {2} skipping {3}'.format(i, n, id, cfgDetails))
-              continue
-
-          if self.options["quiet"]:
-            print '{0}'.format(cfgDetails)
-          else:
-            self.log('{0}/{1} {2} executing {3}'.format(i, n, id, cfgDetails))
-
-          if self.options["dryRun"]:
-            continue
-
-          self.build(variant)
-          self.beforeAll(variant)
-
-          logpaths = run(variant, id, self.options["verbose"])
-
-          for task, path in logpaths.items():
-            params = variant["config"].copy()
-            params.update({"task": task})
-            self.runreport.append({"id": id, "params": params})
-
-            # update report file continuously
-            with open('results/index.json', 'w') as f:
-              json.dump(self.runreport, f)
-
-          if i < n:
-              self.afterAll(variant, allVariants[i])
-          else:
-              self.afterAll(variant, None)
+      for v in allVariants:
+          self.process(v)
+      self.afterAll()
 
 
-def run(config, id, verbose):
-  logdir = 'results/'+id+'/'
-  processesToWait = []
-  processesToKill = []
-  logPaths = {}
-  logFiles = []
-  if not os.path.exists(logdir):
-    os.makedirs(logdir)
-  cwd = config.get("workdir")
-  if "beforeEach" in config:
-    ret = subprocess.call(config["beforeEach"] + [json.dumps(config["config"])], cwd=cwd)
-    if ret != 0:
-      raise RuntimeError('beforeEach step failed. Command: {0}'.format(config["beforeEach"]))
-  if "wait_for_port" in config:
-    wait_for_port(int(config["wait_for_port"]))
-  for taskName, t in config["tasks"].items():
-    logpath = logdir + taskName + '.log'
-    logPaths[taskName] = logpath
-    if verbose:
-      print logpath
-    logPathF=open(logpath,'w+')
-    logFiles.append(logPathF)
-    threadsCount = config["config"].get(taskName + "Threads", 1)
-    if t.get("kill", False):
-        processesList = processesToKill
-    else:
-        processesList = processesToWait
-    for i in range(threadsCount):
-      p = subprocess.Popen(t["cmd"] + params(config), stdout=logPathF, cwd=cwd)
-      processesList.append(p)
-  for p in processesToWait:
-    ret = p.wait()
-    if ret != 0:
-        raise RuntimeError('process returned {0}'.format(ret))
-  for p in processesToKill:
-      p.kill()
-  for logFile in logFiles:
-    logFile.close()
-  if "afterEach" in config:
-    ret = subprocess.call(config["afterEach"] + [json.dumps(config["config"])], cwd=cwd)
-    if ret != 0:
-      raise RuntimeError('afterEach step failed. Command: {0}'.format(config["afterEach"]))
-  return logPaths
+    def process(self, v):
+        variant = self.completeVariant(v)
+        self.log('{0}'.format(json.dumps(v)))
+
+        if self.options["dryRun"]:
+            return []
+
+        id = createId(variant)
+        wasRun = [r for r in self.runreport if r["id"] == id]
+        if wasRun and not self.options["overwrite"]:
+            return wasRun
+
+        self.afterAll(variant)
+        self.build(variant)
+        self.beforeAll(variant)
+        self.beforeEach(variant)
+        wait_for_port(variant.get("wait_for_port"))
+        results = self.run(variant)
+        self.runreport.extend(results)
+        with open('results/index.json', 'w') as f:
+            json.dump(self.runreport, f)
+        self.afterEach(variant)
+
+        return results;
+
+
+    def run(self, config):
+      id = createId(config)
+      verbose = self.options["verbose"]
+      cwd = config.get("workdir")
+      logdir = 'results/'+id+'/'
+      processesToWait = []
+      processesToKill = []
+      logPaths = {}
+      logFiles = []
+      if not os.path.exists(logdir):
+        os.makedirs(logdir)
+      for taskName, t in config["tasks"].items():
+        logpath = logdir + taskName + '.log'
+        logPaths[taskName] = logpath
+        if verbose:
+          print logpath
+        logPathF=open(logpath,'w+')
+        logFiles.append(logPathF)
+        threadsCount = config["config"].get(taskName + "Threads", 1)
+        if t.get("kill", False):
+            processesList = processesToKill
+        else:
+            processesList = processesToWait
+        for i in range(threadsCount):
+          p = subprocess.Popen(t["cmd"] + params(config), stdout=logPathF, cwd=cwd)
+          processesList.append(p)
+      for p in processesToWait:
+        ret = p.wait()
+        if ret != 0:
+            raise RuntimeError('process returned {0}'.format(ret))
+      for p in processesToKill:
+          p.kill()
+      for logFile in logFiles:
+        logFile.close()
+      result = []
+      for task, path in logPaths.items():
+          p = config["config"].copy()
+          p.update({"task": task})
+          result.append({"id": id, "params": p})
+      return result
 
 
 def params(config):
@@ -305,8 +324,9 @@ def variants(dict):
 
 
 def pickOptionsKeys(obj):
-    blackList = ["config_name", "cpu cores", "MemTotal", "model name", "oslabel"]
+    blackList = ["@config", "cpu cores", "MemTotal", "model name", "oslabel"]
     return { key: obj[key] for key in obj.keys() if key not in blackList }
+
 
 def read_procfile(path):
   out = {}
@@ -340,6 +360,9 @@ def sysinfo():
 
 
 def wait_for_port(port):
+    if port is None:
+        return
+    port = int(port)
     port_is_open = False
     while not port_is_open:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -347,6 +370,7 @@ def wait_for_port(port):
         port_is_open = result == 0
         time.sleep(3)
     return port_is_open
+
 
 if __name__ == "__main__":
   main(sys.argv[1:])
