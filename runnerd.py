@@ -114,9 +114,19 @@ def daemon_run():
     except RuntimeError as ex:
         return json.dumps({"error": ex.message})
 
+
+@bottle.post('/name')
+def daemon_name():
+    bottle.response.content_type = 'application/json'
+    cfg = bottle.request.json
+    runner.info['oslabel'] = cfg['name']
+    return json.dumps("my_name_is", runner.info['oslabel'])
+
+
 @bottle.get('/log/<id>/<task>')
 def daemon_logfile(id, task):
     return bottle.static_file("{0}.log".format(task), root='{0}/{1}/'.format(runner.options["resultsDir"], id))
+
 
 @bottle.get('/results')
 def daemon_run():
@@ -362,16 +372,10 @@ def sysinfo():
   cpuinfo = dict([(k, all.get(k, '')) for k in ['cpu cores', 'model name']])
   all = read_procfile('/proc/meminfo')
   meminfo = dict([(k, all.get(k, '')) for k in ['MemTotal']])
-  oslabel = None
-  path = os.path.expanduser('~/.perflabel')
-  if os.path.isfile(path):
-    with open(path, 'r') as f:
-      oslabel = f.next().strip()
   out = {}
   out.update(cpuinfo)
   out.update(meminfo)
-  if oslabel:
-      out['oslabel'] = oslabel
+  out['oslabel'] = ''
   return out
 
 

@@ -14,6 +14,7 @@ if [ ! -e ~/.perflabel ]; then
   echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections >> $LOG 2>&1
   apt-get -y install oracle-java8-installer >> $LOG 2>&1
   apt-get -y install maven2 >> $LOG 2>&1
+  pip install bottle
   ln -s /usr/bin/nodejs /usr/bin/node >> $LOG 2>&1
   echo LABEL > ~/.perflabel
 fi
@@ -27,17 +28,4 @@ else
   npm install >> $LOG 2>&1
 fi
 
-rm -rf results
-rm -rf results.tar.gz
-
-if [ -e ~/index.json -a ! -e results/index.json ]; then
-  mkdir -p results
-  cp ~/index.json results/index.json
-fi
-
-if [ -e ~/cfgstorun.txt ]; then
-  ./runner.py -b -i @~/cfgstorun.txt
-else
-  ./runner.py -b #EXTRAARG
-fi
-tar czf results.tar.gz results
+./runnerd.py -b

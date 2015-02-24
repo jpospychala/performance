@@ -9,7 +9,8 @@ import time
 import threading
 
 
-def main(nodes):
+def main(nodes_name, nodes):
+    set_name(nodes[0], nodes_name)
     variants = get_variants(nodes[0])
     runner = Runner(variants)
     if len(runner.variants) == 0:
@@ -19,7 +20,7 @@ def main(nodes):
 
     threads = []
     for node in nodes:
-        thread = HostRunner(node, runner)
+        thread = HostRunner(node, runner, nodes_name)
         thread.start()
         threads.append(thread)
     while len(threads) > 0:
@@ -83,10 +84,11 @@ class Runner:
 
 class HostRunner(threading.Thread):
 
-    def __init__(self, node, runner):
+    def __init__(self, node, runner, nodes_name):
         threading.Thread.__init__(self)
         self.node = node
         self.runner = runner
+        self.nodes_name = nodes_name
 
 
     def status(self):
@@ -94,6 +96,7 @@ class HostRunner(threading.Thread):
 
 
     def run(self):
+        set_name(self.node, self.nodes_name)
         v = self.chooseVariant()
         while v:
             self.runAndFetch(v)
@@ -132,6 +135,13 @@ class HostRunner(threading.Thread):
 def get_variants(addr):
     return requests.get('http://{0}/variants'.format(addr)).json()
 
+
+def set_name(addr,name):
+    data=json.dumps({'name': name})
+    headers = {'Content-Type': 'application/json'}
+    requests.post('http://{0}/name'.format(addr), headers=headers, data=data)
+
+
 def get_log(addr, id, task):
     logdir = 'results/{0}'.format(id)
     if not os.path.exists(logdir):
@@ -141,9 +151,7 @@ def get_log(addr, id, task):
 
 def run_variant(addr, v):
     data = json.dumps(v)
-    headers = {
-        'Content-Type': 'application/json'
-    }
+    headers = {'Content-Type': 'application/json'}
     return requests.post('http://{0}/run'.format(addr), headers=headers, data=data).json()
 
 
@@ -155,4 +163,4 @@ def matches(v, r):
     return True
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main(sys.argv[1], sys.argv[2:])
