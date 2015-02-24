@@ -22,13 +22,14 @@ def main(argv):
     "doBuild": False,
     "quiet": False,
     "instance": None,
-    "port": None
+    "port": None,
+    "resultsDir": 'results'
   }
   configFileName = 'config.json'
   logPath = '~/.runner.log'
 
   try:
-    opts, args = getopt.getopt(argv, "hbovqnc:i:d:", ["help", "build", "overwrite", "verbose", "quite", "dryrun", "config", "instance", "daemon"])
+    opts, args = getopt.getopt(argv, "hbovqnc:i:d:r:", ["help", "build", "overwrite", "verbose", "quite", "dryrun", "config", "instance", "daemon", "results"])
   except getopt.GetoptError:
     usage()
     sys.exit(2)
@@ -50,6 +51,8 @@ def main(argv):
       configFileName = arg
     if opt in ("-d", "--daemon"):
       options["port"] = int(arg)
+    if opt in ("-r", "--results"):
+        options["resultsDir"] = arg
     if opt in ("-i", "--instance"):
       if len(arg) > 0 and arg[0] == '@':
         with open(os.path.expanduser(arg[1:]), 'r') as f:
@@ -63,7 +66,7 @@ def main(argv):
     configFile = json.load(f)
 
   try:
-    with open('results/index.json', 'r') as f:
+    with open('{0}/index.json'.format(options["resultsDir"]), 'r') as f:
       report = json.load(f)
   except:
     report = []
@@ -105,9 +108,15 @@ def daemon_ping():
 def daemon_run():
     bottle.response.content_type = 'application/json'
     cfg = bottle.request.json
-    result = runner.process(cfg)
-    return json.dumps({"result": result})
+    try:
+        result = runner.process(cfg)
+        return json.dumps({"result": result})
+    except RuntimeError as ex:
+        return json.dumps({"error": ex.message})
 
+@bottle.get('/log/<id>/<task>')
+def daemon_logfile(id, task):
+    return bottle.static_file("{0}.log".format(task), root='{0}/{1}/'.format(runner.options["resultsDir"], id))
 
 @bottle.get('/results')
 def daemon_run():
@@ -250,7 +259,7 @@ class Runner:
         wait_for_port(variant.get("wait_for_port"))
         results = self.run(variant)
         self.runreport.extend(results)
-        with open('results/index.json', 'w') as f:
+        with open('{0}/index.json'.format(self.options["resultsDir"]), 'w') as f:
             json.dump(self.runreport, f)
         self.afterEach(variant)
 
@@ -261,7 +270,7 @@ class Runner:
       id = createId(config)
       verbose = self.options["verbose"]
       cwd = config.get("workdir")
-      logdir = 'results/'+id+'/'
+      logdir = self.options["resultsDir"]+'/'+id+'/'
       processesToWait = []
       processesToKill = []
       logPaths = {}
