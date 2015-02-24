@@ -22,7 +22,7 @@ def main(argv):
     "doBuild": False,
     "quiet": False,
     "instance": None,
-    "port": None,
+    "port": 9081,
     "resultsDir": 'results'
   }
   configFileName = 'config.json'
