@@ -9,12 +9,12 @@ if [ ! -e ~/.perflabel ]; then
   apt-get -y install python-software-properties >> $LOG 2>&1
   add-apt-repository -y ppa:webupd8team/java >> $LOG 2>&1
   apt-get update >> $LOG 2>&1
-  apt-get -y install git node.js gcc make docker.io npm g++ libzmq-dev >> $LOG 2>&1
+  apt-get -y install python-pip git node.js gcc make docker.io npm g++ libzmq-dev >> $LOG 2>&1
   echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections >> $LOG 2>&1
   echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections >> $LOG 2>&1
   apt-get -y install oracle-java8-installer >> $LOG 2>&1
   apt-get -y install maven2 >> $LOG 2>&1
-  pip install bottle
+  pip install bottle >> $LOG 2>&1
   ln -s /usr/bin/nodejs /usr/bin/node >> $LOG 2>&1
   echo LABEL > ~/.perflabel
 fi
@@ -28,4 +28,5 @@ else
   npm install >> $LOG 2>&1
 fi
 
-./runnerd.py -b
+# TODO restart infinitely runnerd?
+screen -d -m ./runnerd.py -b
