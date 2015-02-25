@@ -88,7 +88,7 @@ def usage():
   print "-c config_file  configuration file, default: config.json"
   print "-n --dryrun     don't actually run anything"
   print "-i instance     run specific instance or list of configs if instance starts with @"
-  print "-p --port port  listen for commands on port"
+  print "-d --daemon port  listen for commands on port"
   print "-h              print this information"
   print "-v --verbose    verbose"
   print "-q --quiet      quiet"
