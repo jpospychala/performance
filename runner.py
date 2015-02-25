@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import datetime
 import itertools
 import json
 import os
@@ -24,7 +25,7 @@ def main(nodes_name, nodes):
         thread.start()
         threads.append(thread)
     while len(threads) > 0:
-        time.sleep(1)
+        time.sleep(30)
         runner.variants_status()
         for thread in threads:
             if thread.is_alive():
@@ -39,6 +40,7 @@ def main(nodes_name, nodes):
 
 class Runner:
     def __init__(self, variants):
+        self.startTime = datetime.datetime.now()
         self.isDirty = False
         self.reportpath = 'results/index.json'
         try:
@@ -77,9 +79,14 @@ class Runner:
 
     def variants_status(self):
         statuses = [v['status'] for v in self.variants]
+        statuses.sort()
         statusgroups = [list(j) for (i, j) in itertools.groupby(statuses)]
+        statusesDict = dict([[j[0], len(j)] for j in statusgroups])
         statusStr = ', '.join(['{0}: {1}'.format(j[0], len(j)) for j in statusgroups])
-        print statusStr
+        now = datetime.datetime.now()
+        timePassed = now - self.startTime
+        eta = timePassed * statusesDict['Todo']/statusesDict.get('Done', 1)
+        print "{0} ETA {1}".format(statusStr, str(eta))
 
 
 class HostRunner(threading.Thread):
