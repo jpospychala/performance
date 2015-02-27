@@ -325,7 +325,7 @@ def waitFor(processesToWait):
               toRemove.append(p)
               if ret != 0:
                   raise RuntimeError('process returned {0}'.format(ret))
-        for p in toRemove
+        for p in toRemove:
             processesToWait.remove(p)
 
 
