@@ -302,10 +302,7 @@ class Runner:
         for i in range(threadsCount):
           p = subprocess.Popen(t["cmd"] + params(config), stdout=logPathF, cwd=cwd)
           processesList.append(p)
-      for p in processesToWait:
-        ret = p.wait()
-        if ret != 0:
-            raise RuntimeError('process returned {0}'.format(ret))
+      waitFor(processesToWait)
       for p in processesToKill:
           p.kill()
       for logFile in logFiles:
@@ -316,6 +313,21 @@ class Runner:
           p.update({"task": task})
           result.append({"id": id, "params": p})
       return result
+
+
+def waitFor(processesToWait):
+    while len(processesToWait) > 0:
+        toRemove = []
+        time.sleep(2)
+        for p in processesToWait:
+          ret = p.poll()
+          if ret != None:
+              toRemove.append(p)
+              if ret != 0:
+                  raise RuntimeError('process returned {0}'.format(ret))
+        for p in toRemove
+            processesToWait.remove(p)
+
 
 
 def params(config):
