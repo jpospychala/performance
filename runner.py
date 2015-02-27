@@ -10,18 +10,12 @@ import time
 import threading
 
 
-def main(nodes_name, nodes):
-    set_name(nodes[0], nodes_name)
-    variants = get_variants(nodes[0])
-    runner = Runner(variants)
-    if len(runner.variants) == 0:
-        print "nothing to do"
-        return
-    print "about to execute {0} variants across {1} nodes".format(len(runner.variants), len(nodes))
-
+def main(nodes):
+    runner = Runner()
     threads = []
+    firstNode = nodes[0]
     for node in nodes:
-        thread = HostRunner(node, runner, nodes_name)
+        thread = HostRunner(node, runner, node == firstNode)
         thread.start()
         threads.append(thread)
     while len(threads) > 0:
@@ -36,10 +30,10 @@ def main(nodes_name, nodes):
         runner.save()
 
 
-
-
 class Runner:
-    def __init__(self, variants):
+    def __init__(self):
+        self.variants = []
+        self.ready = False
         self.startTime = datetime.datetime.now()
         self.isDirty = False
         self.reportpath = 'results/index.json'
@@ -48,9 +42,19 @@ class Runner:
             self.report = json.load(f)
         except:
           self.report = []
-        missing_variants = self.extract_missing_only(variants)
-        self.variants = [{'status':'Todo', 'v':v} for v in missing_variants]
 
+    def set_variants(self, variants):
+        print "set {0} variants".format(len(variants))
+        missing_variants = self.extract_missing_only(variants)
+        new_variants = [{'status':'Todo', 'v':v} for v in missing_variants]
+
+        if len(new_variants) > 0:
+            print "about to execute {0} variants".format(len(new_variants))
+        else:
+            print "nothing to do"
+
+        self.variants = new_variants
+        self.ready = True
 
     def extract_missing_only(self, variants):
         missing_variants = []
@@ -85,17 +89,17 @@ class Runner:
         statusStr = ', '.join(['{0}: {1}'.format(j[0], len(j)) for j in statusgroups])
         now = datetime.datetime.now()
         timePassed = now - self.startTime
-        eta = timePassed * statusesDict['Todo']/statusesDict.get('Done', 1)
-        print "{0} ETA {1}".format(statusStr, str(eta))
+        eta = timePassed * statusesDict.get('Todo', 0)/statusesDict.get('Done', 1)
+        print "{0}: {1} ETA {2}".format(now, statusStr, str(eta))
 
 
 class HostRunner(threading.Thread):
 
-    def __init__(self, node, runner, nodes_name):
+    def __init__(self, node, runner, is_master):
         threading.Thread.__init__(self)
         self.node = node
         self.runner = runner
-        self.nodes_name = nodes_name
+        self.is_master = is_master
 
 
     def status(self):
@@ -103,19 +107,33 @@ class HostRunner(threading.Thread):
 
 
     def run(self):
-        set_name(self.node, self.nodes_name)
+        print "{0}: create node".format(self.node.name)
+        self.node.create()
+        set_name(self.node.addr, self.node.label)
+        self.do_master_tasks()
+        while not self.runner.ready:
+            time.sleep(10)
         v = self.chooseVariant()
         while v:
             self.runAndFetch(v)
             v = self.chooseVariant()
+        self.node.destroy()
+
+
+    def do_master_tasks(self):
+        if not self.is_master:
+            return
+
+        variants = get_variants(self.node.addr)
+        self.runner.set_variants(variants)
 
 
     def chooseVariant(self):
         for v in self.runner.variants:
             if v['status'] == 'Todo':
-                v['runner'] = self.node
+                v['runner'] = self.node.name
         for toRun in self.runner.variants:
-            if toRun['runner'] == self.node:
+            if toRun['runner'] == self.node.name:
                 toRun['status'] = 'Running'
                 return toRun
         return None
@@ -123,10 +141,10 @@ class HostRunner(threading.Thread):
 
     def runAndFetch(self, v):
         v['runner'] = None
-        print "{0}: running {1} {2}".format(self.node, v['v'], v.get('retries'))
-        ret = run_variant(self.node, v['v'])
+        print "{0}: running {1} {2}".format(self.node.name, v['v'], v.get('retries'))
+        ret = run_variant(self.node.addr, v['v'])
         if 'error' in ret:
-            print "{0}: failed {1}: {2}".format(self.node, v['v'], ret['error'])
+            print "{0}: failed {1}: {2}".format(self.node.name, v['v'], ret['error'])
             v['retries'] = v.get('retries', 0) + 1
             if v['retries'] > 5:
                 v['status'] = 'Failed'
@@ -134,7 +152,7 @@ class HostRunner(threading.Thread):
                 v['status'] = 'Todo'
         else:
             for task in ret['result']:
-                get_log(self.node, task['id'], task['params']['task'])
+                get_log(self.node.addr, task['id'], task['params']['task'])
             self.runner.add_to_index(ret['result'])
             v['status'] = 'Done'
 
@@ -164,10 +182,7 @@ def run_variant(addr, v):
 
 def matches(v, r):
     '''True if all v properties equal r properties'''
-    for key, val in v.items():
-        if r.get(key, None) != val:
-            return False
-    return True
+    return { k: r[k] for k in v.keys() } == v
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2:])

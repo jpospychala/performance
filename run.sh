@@ -29,4 +29,4 @@ else
 fi
 
 # TODO restart infinitely runnerd?
-screen -d -m ./runnerd.py -b
+screen -d -m /bin/bash -c "./runnerd.py -b >> $LOG 2>&1"

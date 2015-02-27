@@ -19,36 +19,40 @@ def main(args):
         stop(args[0])
     elif cmd == "ssh":
         ssh(args[0])
-    elif cmd == "run":
-        run(*args)
     elif cmd == "parallel":
-        parallel(10, "512mb")
+        parallel(2, "512mb")
     else:
         print "unknown command {0}".format(cmd)
 
 def parallel(dropletsCount, dropletSize):
     dropletsList = []
     for i in range(dropletsCount):
-        get_or_create('droplet{0}'.format(i), dropletSize)
-    for i in range(dropletsCount):
-        d = wait_for_droplet('droplet{0}'.format(i))
-        dropletsList.append(d)
-    provisionThreads = []
-    for d in dropletsList:
-        t = provision(d)
-        provisionThreads.append(t)
-    for t in provisionThreads:
-        t.wait()
-    print "provisioned all threads"
-    ipList = ['{0}:9081'.format(d.ip) for d in dropletsList]
-    runner.main(dropletSize, ipList)
+        dropletsList.append(DigitalOceanDroplet('droplet{0}'.format(i), dropletSize))
+    runner.main(dropletsList)
 
+class DigitalOceanDroplet:
+    def __init__(self, name, size):
+        self.name = name
+        self.size = size
+        self.label = 'digitalocean{0}'.format(self.size)
+
+    def create(self):
+        self.d = get_or_create(self.name, self.size)
+        if not self.d:
+            self.d = wait_for_droplet(self.name)
+        self.addr = "{0}:9081".format(self.d.ip)
+        print "provision {0}".format(self.name)
+        provision(self.d)
+
+    def destroy(self):
+        stop_droplet(self.d)
 
 def get_or_create(dropletName, dropletSize):
     d = get_droplet(dropletName)
-    if not d:
-        print "Droplet {0} not found. Creating...".format(dropletName)
-        create_droplet(dropletName, dropletSize)
+    if d:
+        return d
+    print "Droplet {0} not found. Creating...".format(dropletName)
+    create_droplet(dropletName, dropletSize)
 
 
 def wait_for_droplet(dropletName):
@@ -62,10 +66,8 @@ def wait_for_droplet(dropletName):
 
 
 def provision(d):
-    print "provision {0}".format(d.ip)
     subprocess.call(["rsync", "-ace", "ssh -q -oStrictHostKeyChecking=no", "./run.sh", "root@{0}:/root".format(d.ip)])
-    t = subprocess.Popen(["ssh", "-q", "-oStrictHostKeyChecking=no", "root@{0}".format(d.ip),"bash /root/run.sh"])
-    return t
+    subprocess.call(["ssh", "-q", "-oStrictHostKeyChecking=no", "root@{0}".format(d.ip),"bash /root/run.sh"])
 
 def status(dropletName):
     d = get_droplet(dropletName)
@@ -105,7 +107,7 @@ def stop_droplet(d):
 def get_droplet(dropletName):
     r = do_request("GET", "droplets")
     if r.status_code != 200:
-        raise RuntimeError(r.json())
+        raise RuntimeError(r.text)
     droplets = r.json().get("droplets", {})
     for droplet in droplets:
         if droplet.get("name") == dropletName:
