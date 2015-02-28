@@ -28,5 +28,8 @@ else
   npm install >> $LOG 2>&1
 fi
 
+# kill previous runnerd instances
+ps aux | grep 'python ./runnerd.py' | sed 's/  */ /g' | cut -f 2 -d ' ' | xargs kill
+
 # TODO restart infinitely runnerd?
 screen -d -m /bin/bash -c "./runnerd.py -b >> $LOG 2>&1"
