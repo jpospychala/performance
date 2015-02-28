@@ -166,6 +166,7 @@ class Runner:
             return
         self.built.append(config['config']['@config'])
         if self.options["doBuild"] and "build" in config:
+            self.verbose("build")
             ret = subprocess.call(config["build"], cwd=config.get("workdir"), stdout=self.logFile, stderr=self.logFile)
             if ret != 0:
                 raise RuntimeError('build failed. Command: {0}'.format(config["build"]))
@@ -176,6 +177,7 @@ class Runner:
             return
         self.lastRanConfig = config
         if not self.options["dryRun"] and "before" in config:
+            self.verbose("beforeAll")
             ret = subprocess.call(config["before"], cwd=config.get("workdir"), stdout=self.logFile, stderr=self.logFile)
             if ret != 0:
                 raise RuntimeError('before step failed. Command: {0}'.format(config["before"]))
@@ -187,6 +189,7 @@ class Runner:
         if next is not None and next['config']['@config'] == self.lastRanConfig['config']['@config']:
             return
         if not self.options["dryRun"] and "after" in self.lastRanConfig:
+            self.verbose("afterAll")
             ret = subprocess.call(self.lastRanConfig["after"], cwd=self.lastRanConfig.get("workdir"), stdout=self.logFile, stderr=self.logFile)
             if ret != 0:
                 raise RuntimeError('after step failed. Command: {0}'.format(self.lastRanConfig["after"]))
@@ -194,6 +197,7 @@ class Runner:
 
     def beforeEach(self, config):
         if "beforeEach" in config:
+            self.verbose("beforeEach")
             cwd = config.get("workdir")
             ret = subprocess.call(config["beforeEach"] + [json.dumps(config["config"])], cwd=cwd)
             if ret != 0:
@@ -202,6 +206,7 @@ class Runner:
 
     def afterEach(self, config):
         if "afterEach" in config:
+            self.verbose("afterEach")
             cwd = config.get("workdir")
             ret = subprocess.call(config["afterEach"] + [json.dumps(config["config"])], cwd=cwd)
             if ret != 0:
@@ -214,6 +219,12 @@ class Runner:
         print message
         sys.stdout.flush()
 
+
+    def verbose(self, message):
+        if not self.options['verbose']:
+            return
+        print message
+        sys.stdout.flush()
 
     def variants(self):
         allVariants = []
@@ -251,6 +262,7 @@ class Runner:
 
 
     def process(self, v):
+        self.verbose("process {0}".format(v))
         variant = self.completeVariant(v)
         self.log('{0}'.format(json.dumps(v)))
 
@@ -272,11 +284,12 @@ class Runner:
         with open('{0}/index.json'.format(self.options["resultsDir"]), 'w') as f:
             json.dump(self.runreport, f)
         self.afterEach(variant)
-
+        self.verbose("processed {0}: {1}".format(v, results))
         return results;
 
 
     def run(self, config):
+      self.verbose("run {0}".format(config))
       id = createId(config)
       verbose = self.options["verbose"]
       cwd = config.get("workdir")
@@ -306,6 +319,7 @@ class Runner:
       try:
           waitFor(processesToWait, config["config"].get("_timeout", 30))
       finally:
+          self.verbose("killing subprocesses")
           for p in processesToWait + processesToKill:
               if p.poll() is None:
                 p.kill()
@@ -321,6 +335,7 @@ class Runner:
 
 
 def waitFor(processesToWait, timeout):
+    self.verbose("waitfor {0} processes".format(len(processesToWait)))
     deadline = time.clock() + timeout
     while len(processesToWait) > 0:
         if time.clock() > deadline:

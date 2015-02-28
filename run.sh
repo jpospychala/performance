@@ -32,4 +32,4 @@ fi
 ps aux | grep 'python ./runnerd.py' | sed 's/  */ /g' | cut -f 2 -d ' ' | xargs kill
 
 # TODO restart infinitely runnerd?
-screen -d -m /bin/bash -c "./runnerd.py -b >> $LOG 2>&1"
+screen -d -m /bin/bash -c "./runnerd.py -vb >> $LOG 2>&1"
