@@ -120,7 +120,6 @@ class HostRunner(threading.Thread):
 
 
     def run(self):
-        print "{0}: create node".format(self.node.name)
         self.node.create()
         set_name(self.node.addr, self.node.label)
         self.do_master_tasks()
