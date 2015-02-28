@@ -205,7 +205,7 @@ class Runner:
         if "beforeEach" in config:
             self.verbose("beforeEach")
             cwd = config.get("workdir")
-            ret = subprocess.call(config["beforeEach"] + [json.dumps(config["config"])], cwd=cwd)
+            ret = subprocess.call(config["beforeEach"], cwd=cwd, stdout=self.logFile, stderr=self.logFile)
             if ret != 0:
                 raise RuntimeError('beforeEach step failed. Command: {0}'.format(config["beforeEach"]))
 
@@ -215,7 +215,7 @@ class Runner:
         if "afterEach" in config:
             self.verbose("afterEach")
             cwd = config.get("workdir")
-            ret = subprocess.call(config["afterEach"] + [json.dumps(config["config"])], cwd=cwd)
+            ret = subprocess.call(config["afterEach"], cwd=cwd, stdout=self.logFile, stderr=self.logFile)
             if ret != 0:
                 raise RuntimeError('afterEach step failed. Command: {0}'.format(config["afterEach"]))
 
