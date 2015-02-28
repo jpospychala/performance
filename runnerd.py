@@ -423,16 +423,19 @@ def sysinfo():
   return out
 
 
-def wait_for_port(port):
+def wait_for_port(port, timeout=30):
     if port is None:
         return
     port = int(port)
     port_is_open = False
+    deadline = time.clock() + timeout
     while not port_is_open:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         result = sock.connect_ex(('localhost',port))
         port_is_open = result == 0
         time.sleep(3)
+        if time.clock() > deadline:
+            raise RuntimeError('timed out waiting for port {0}'.format(port))
     return port_is_open
 
 
