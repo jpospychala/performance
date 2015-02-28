@@ -29,7 +29,7 @@ else
 fi
 
 # kill previous runnerd instances
-ps aux | grep 'python ./runnerd.py' | sed 's/  */ /g' | cut -f 2 -d ' ' | xargs kill
+ps aux | grep 'python ./runnerd.py' | sed 's/  */ /g' | cut -f 2 -d ' ' | xargs kill || true
 
 # TODO restart infinitely runnerd?
 screen -d -m /bin/bash -c "./runnerd.py -vb >> $LOG 2>&1"
