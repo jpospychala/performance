@@ -129,7 +129,7 @@ class HostRunner(threading.Thread):
         while v:
             try:
                 self.runAndFetch(v)
-            except ConnectionError:
+            except requests.exceptions.ConnectionError:
                 print "{0}: Connection error, recreating node".format(self.node.name)
                 self.node.create()
                 set_name(self.node.addr, self.node.label)

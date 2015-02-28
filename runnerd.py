@@ -113,6 +113,8 @@ def daemon_run():
         return json.dumps({"result": result})
     except RuntimeError as ex:
         return json.dumps({"error": ex.message})
+    except:
+        return json.dumps({"error": sys.exc_info()[0]})
 
 
 @bottle.post('/name')
