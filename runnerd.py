@@ -186,6 +186,7 @@ class Runner:
 
 
     def afterAll(self, next=None):
+        self.verbose("afterAll {0} {1}".format(self.lastRanConfig, next))
         if self.lastRanConfig is None:
             return
         if next is not None and next['config']['@config'] == self.lastRanConfig['config']['@config']:
