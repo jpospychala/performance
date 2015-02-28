@@ -164,6 +164,7 @@ class Runner:
 
 
     def build(self, config):
+        self.verbose("build")
         if config['config']['@config'] in self.built:
             return
         self.built.append(config['config']['@config'])
@@ -175,6 +176,7 @@ class Runner:
 
 
     def beforeAll(self, config):
+        self.verbose("beforeAll")
         if self.lastRanConfig is not None and config['config']['@config'] == self.lastRanConfig['config']['@config']:
             return
         self.lastRanConfig = config
@@ -199,6 +201,7 @@ class Runner:
 
 
     def beforeEach(self, config):
+        self.verbose("beforeEach")
         if "beforeEach" in config:
             self.verbose("beforeEach")
             cwd = config.get("workdir")
@@ -208,6 +211,7 @@ class Runner:
 
 
     def afterEach(self, config):
+        self.verbose("afterEach")
         if "afterEach" in config:
             self.verbose("afterEach")
             cwd = config.get("workdir")
