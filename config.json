@@ -8,9 +8,8 @@
     },
     "wait_for_port": 5672,
     "build": ["make", "rabbit_docker_image"],
-    "before": ["make", "startdocker"],
-    "after": ["make", "stopdocker"],
-    "afterEach": ["node", "reset.js"],
+    "beforeEach": ["make", "startdocker"],
+    "afterEach": ["make", "stopdocker"],
     "options": {
       "n": [1],
       "producerThreads": [1, 2, 4, 8],
@@ -36,9 +35,8 @@
       "monitor": {"cmd": ["node", "../../monitor/monitor.js"], "kill": true}
     },
     "wait_for_port": 5672,
-    "before": ["make", "startdocker"],
-    "after": ["make", "stopdocker"],
-    "afterEach": ["node", "../reset.js"],
+    "beforeEach": ["make", "startdocker"],
+    "afterEach": ["make", "stopdocker"],
     "options": {
       "n": [1],
       "producerThreads": [1, 2, 4, 8],
