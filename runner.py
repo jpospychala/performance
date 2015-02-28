@@ -195,7 +195,7 @@ def run_variant(addr, v):
 
 def matches(v, r):
     '''True if all v properties equal r properties'''
-    return { k: r[k] for k in v.keys() } == v
+    return { k: r.get(k, None) for k in v.keys() } == v
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2:])
