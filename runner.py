@@ -119,14 +119,20 @@ class HostRunner(threading.Thread):
 
 
     def run(self):
+
         self.node.create()
         set_name(self.node.addr, self.node.label)
         self.do_master_tasks()
         while not self.runner.ready:
-            time.sleep(10)
+            time.sleep(1)
         v = self.chooseVariant()
         while v:
-            self.runAndFetch(v)
+            try:
+                self.runAndFetch(v)
+            except ConnectionError:
+                print "{0}: Connection error, recreating node".format(self.node.name)
+                self.node.create()
+                set_name(self.node.addr, self.node.label)
             v = self.chooseVariant()
         self.node.destroy()
 
