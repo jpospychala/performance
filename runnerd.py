@@ -302,11 +302,16 @@ class Runner:
         for i in range(threadsCount):
           p = subprocess.Popen(t["cmd"] + params(config), stdout=logPathF, cwd=cwd)
           processesList.append(p)
-      waitFor(processesToWait)
-      for p in processesToKill:
-          p.kill()
-      for logFile in logFiles:
-        logFile.close()
+
+      try:
+          waitFor(processesToWait, config["config"].get("_timeout", 30))
+      finally:
+          for p in processesToWait + processesToKill:
+              if p.poll() is None:
+                p.kill()
+          for logFile in logFiles:
+              logFile.close()
+
       result = []
       for task, path in logPaths.items():
           p = config["config"].copy()
@@ -315,8 +320,11 @@ class Runner:
       return result
 
 
-def waitFor(processesToWait):
+def waitFor(processesToWait, timeout):
+    deadline = time.clock() + timeout
     while len(processesToWait) > 0:
+        if time.clock() > deadline:
+            raise RuntimeError('timed out ({0} sec)'.format(timeout))
         toRemove = []
         time.sleep(2)
         for p in processesToWait:
@@ -327,7 +335,6 @@ def waitFor(processesToWait):
                   raise RuntimeError('process returned {0}'.format(ret))
         for p in toRemove:
             processesToWait.remove(p)
-
 
 
 def params(config):
