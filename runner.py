@@ -30,6 +30,19 @@ def main(nodes):
         runner.save()
 
 
+class LocalNode:
+    def __init__(self, name):
+        self.name = name
+        self.label = name
+        self.addr = "localhost:9081"
+
+    def create(self):
+        pass
+
+    def destroy(self):
+        pass
+
+
 class Runner:
     def __init__(self):
         self.variants = []
@@ -186,3 +199,5 @@ def matches(v, r):
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2:])
+    localNode = LocalNode("local")
+    main([localNode])
