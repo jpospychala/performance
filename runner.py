@@ -57,7 +57,6 @@ class Runner:
           self.report = []
 
     def set_variants(self, variants):
-        print "set {0} variants".format(len(variants))
         missing_variants = self.extract_missing_only(variants)
         new_variants = [{'status':'Todo', 'v':v} for v in missing_variants]
 

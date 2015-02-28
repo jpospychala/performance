@@ -317,14 +317,16 @@ class Runner:
           processesList.append(p)
 
       try:
+          self.verbose("waitfor {0} processes".format(len(processesToWait)))
           waitFor(processesToWait, config["config"].get("_timeout", 30))
       finally:
-          self.verbose("killing subprocesses")
+          self.verbose("killing {0} subprocesses".format(len(processesToWait + processesToKill)))
           for p in processesToWait + processesToKill:
               if p.poll() is None:
                 p.kill()
           for logFile in logFiles:
               logFile.close()
+          self.verbose('killed')
 
       result = []
       for task, path in logPaths.items():
@@ -335,7 +337,6 @@ class Runner:
 
 
 def waitFor(processesToWait, timeout):
-    self.verbose("waitfor {0} processes".format(len(processesToWait)))
     deadline = time.clock() + timeout
     while len(processesToWait) > 0:
         if time.clock() > deadline:
