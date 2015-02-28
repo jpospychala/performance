@@ -20,7 +20,7 @@ def main(args):
     elif cmd == "ssh":
         ssh(args[0])
     elif cmd == "parallel":
-        parallel(2, "512mb")
+        parallel(10, "512mb")
     else:
         print "unknown command {0}".format(cmd)
 
@@ -40,9 +40,11 @@ class DigitalOceanDroplet:
         self.d = get_or_create(self.name, self.size)
         if not self.d:
             self.d = wait_for_droplet(self.name)
-        self.addr = "{0}:9081".format(self.d.ip)
-        print "provision {0}".format(self.name)
+        port = 9081
+        self.addr = "{0}:{1}".format(self.d.ip, port)
         provision(self.d)
+        wait_for_port(self.d.ip, port)
+        print "provisioned {0}".format(self.name)
 
     def destroy(self):
         stop_droplet(self.d)
