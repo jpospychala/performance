@@ -272,6 +272,7 @@ class Runner:
         id = createId(variant)
         wasRun = [r for r in self.runreport if r["id"] == id]
         if wasRun and not self.options["overwrite"]:
+            self.verbose("wasRun {0}".format(wasRun))
             return wasRun
 
         self.afterAll(variant)
