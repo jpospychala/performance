@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
+import datetime
 import json
 import os
 import random
 import requests
 import shutil
+import signal
 import socket
 import subprocess
 import sys
 import time
-import runner
 
 def main(args):
     cmd = args.pop(0)
@@ -19,16 +20,9 @@ def main(args):
         stop(args[0])
     elif cmd == "ssh":
         ssh(args[0])
-    elif cmd == "parallel":
-        parallel(10, "512mb")
     else:
         print "unknown command {0}".format(cmd)
 
-def parallel(dropletsCount, dropletSize):
-    dropletsList = []
-    for i in range(dropletsCount):
-        dropletsList.append(DigitalOceanDroplet('droplet{0}'.format(i), dropletSize))
-    runner.main(dropletsList)
 
 class DigitalOceanDroplet:
     def __init__(self, name, size):
@@ -49,21 +43,25 @@ class DigitalOceanDroplet:
     def destroy(self):
         stop_droplet(self.d)
 
+
 def get_or_create(dropletName, dropletSize):
     d = get_droplet(dropletName)
     if d:
         return d
-    print "Droplet {0} not found. Creating...".format(dropletName)
+    print "{0} not found. Creating...".format(dropletName)
     create_droplet(dropletName, dropletSize)
 
 
 def wait_for_droplet(dropletName):
     d = None
+    start = time.time()
     while not d:
         d = get_droplet(dropletName)
-    secs = wait_for_port(d.ip, 22)
-    if secs > 5:
-        print "reached {0} after {1} secs".format(dropletName, secs)
+        time.sleep(10)
+    wait_for_port(d.ip, 22)
+
+    secs = time.time() - start
+    print "reached {0} after {1} secs".format(dropletName, secs)
     return d
 
 
@@ -81,7 +79,6 @@ def stop(dropletName):
     d = get_droplet(dropletName)
     assert_droplet(d, dropletName)
     stop_droplet(d)
-
 
 
 def ssh(dropletName):
@@ -147,6 +144,9 @@ def create_droplet(dropletName, dropletSize):
 
 
 def do_request(method, path, data=None):
+    if "DOTOKEN" not in os.environ:
+        raise RuntimeError("Error: Variable $DOTOKEN with digitalocean API token is not set.")
+
     headers = {
         "Authorization": "Bearer {0}".format(os.environ['DOTOKEN']),
         "Content-Type": "application/json"
@@ -154,26 +154,24 @@ def do_request(method, path, data=None):
     url = "https://api.digitalocean.com/v2/{0}".format(path)
     if data:
         data = json.dumps(data)
-    return requests.request(method, url, headers=headers, data=data)
+    ret = requests.request(method, url, headers=headers, data=data)
+    rateLimit = int(ret.headers['RateLimit-Limit'])
+    rateRemaining = int(ret.headers['RateLimit-Remaining'])
+    rateLimitReset = datetime.datetime.fromtimestamp(int(ret.headers['RateLimit-Reset']))
+    if (rateRemaining*1.0 / rateLimit) < 0.3:
+        print "digitalocean rate limit ({0}/{1}) reset: {2}".format(rateRemaining, rateLimit, rateLimitReset)
+    return ret
 
 
 def wait_for_port(host, port):
-    start = time.clock()
     port_is_open = False
     while not port_is_open:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         result = sock.connect_ex((host,port))
         port_is_open = result == 0
         time.sleep(1)
-    after = time.clock()
-    return after-start
-
 
 if __name__ == "__main__":
-    if "DOTOKEN" not in os.environ:
-        print "Error: Variable $DOTOKEN with digitalocean API token is not set."
-        exit(1)
-
     if len(sys.argv) < 2:
         print "Usage: {0} cmd".format(sys.argv[0])
     else:
