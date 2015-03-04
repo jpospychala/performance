@@ -346,9 +346,9 @@ class Runner:
 
 
 def waitFor(processesToWait, timeout):
-    deadline = time.clock() + timeout
+    deadline = time.time() + timeout
     while len(processesToWait) > 0:
-        if time.clock() > deadline:
+        if time.time() > deadline:
             raise RuntimeError('timed out ({0} sec)'.format(timeout))
         toRemove = []
         time.sleep(2)
@@ -428,13 +428,13 @@ def wait_for_port(port, timeout=30):
         return
     port = int(port)
     port_is_open = False
-    deadline = time.clock() + timeout
+    deadline = time.time() + timeout
     while not port_is_open:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         result = sock.connect_ex(('localhost',port))
         port_is_open = result == 0
         time.sleep(3)
-        if time.clock() > deadline:
+        if time.time() > deadline:
             raise RuntimeError('timed out waiting for port {0}'.format(port))
     return port_is_open
 
