@@ -327,7 +327,7 @@ class Runner:
 
       try:
           self.verbose("waitfor {0} processes".format(len(processesToWait)))
-          waitFor(processesToWait, config["config"].get("_timeout", 30))
+          waitFor(processesToWait, config["config"].get("_timeout", 60))
       finally:
           self.verbose("killing {0} subprocesses".format(len(processesToWait + processesToKill)))
           for p in processesToWait + processesToKill:
