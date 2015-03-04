@@ -322,7 +322,7 @@ class Runner:
         else:
             processesList = processesToWait
         for i in range(threadsCount):
-          p = subprocess.Popen(t["cmd"] + params(config), stdout=logPathF, cwd=cwd)
+          p = subprocess.Popen(t["cmd"] + params(config), stdout=logPathF, stderr=self.logFile, cwd=cwd)
           processesList.append(p)
 
       try:
