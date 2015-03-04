@@ -69,16 +69,25 @@ class Runner:
         self.ready = True
 
     def extract_missing_only(self, variants):
-        missing_variants = []
+        print "extract_missing_only start"
+        start = time.time()
+        missing = []
+
+        lastKeys = None
+        reportFilteredKeys = []
         for v in variants:
-            is_missing = True
-            for r in self.report:
-                if matches(v, r['params']):
-                    is_missing = False
-                    break
-            if is_missing:
-                missing_variants.append(v)
-        return missing_variants
+            if v.keys() != lastKeys:
+                lastKeys = v.keys()
+                reportFilteredKeys = [self.vid({ k: r['params'].get(k, None) for k in lastKeys }) for r in self.report]
+
+            if not self.vid(v) in reportFilteredKeys:
+                missing.append(v)
+        print "extract_missing_only end {0}".format(time.time() - start)
+        return missing
+
+    def vid(self, obj):
+        return json.dumps(obj, sort_keys=True)
+
 
     def add_to_index(self, entries):
         self.report.extend(entries)
@@ -196,10 +205,6 @@ def run_variant(addr, v):
     headers = {'Content-Type': 'application/json'}
     return requests.post('http://{0}/run'.format(addr), headers=headers, data=data).json()
 
-
-def matches(v, r):
-    '''True if all v properties equal r properties'''
-    return { k: r.get(k, None) for k in v.keys() } == v
 
 if __name__ == "__main__":
     main(sys.argv[1], sys.argv[2:])
