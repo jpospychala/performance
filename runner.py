@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
 import datetime
+import digitalocean
 import itertools
 import json
 import os
 import requests
+import signal
 import sys
 import time
 import threading
@@ -15,6 +17,7 @@ def main(nodes):
     threads = []
     firstNode = nodes[0]
     for node in nodes:
+        # TODO master should be the first up, not the first on list
         thread = HostRunner(node, runner, node == firstNode)
         thread.start()
         threads.append(thread)
@@ -76,9 +79,10 @@ class Runner:
         lastKeys = None
         reportFilteredKeys = []
         for v in variants:
-            if v.keys() != lastKeys:
-                lastKeys = v.keys()
-                reportFilteredKeys = [self.vid({ k: r['params'].get(k, None) for k in lastKeys }) for r in self.report]
+            keysId = id(sorted(v.keys()))
+            if keysId != lastKeys:
+                lastKeys = keysId
+                reportFilteredKeys = set([self.vid({ k: r['params'].get(k, None) for k in lastKeys }) for r in self.report])
 
             if not self.vid(v) in reportFilteredKeys:
                 missing.append(v)
@@ -206,7 +210,28 @@ def run_variant(addr, v):
     return requests.post('http://{0}/run'.format(addr), headers=headers, data=data).json()
 
 
+def createNodes(argsstr):
+    args = argsstr.split(':')
+    count = 1
+    if len(args) > 0:
+        count = int(args[1])
+    if args[0] == 'local':
+        return [LocalNode('local{0}'.format(i)) for i in range(count)]
+    elif args[0] == 'digitalocean':
+        size = args[2]
+        return [digitalocean.DigitalOceanDroplet('droplet{0}'.format(i), size) for i in range(count)]
+
+
+def signal_handler(signal, frame):
+    print "exit"
+    sys.exit(1)
+
+signal.signal(signal.SIGINT, signal_handler)
+
+
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2:])
-    localNode = LocalNode("local")
-    main([localNode])
+    if len(sys.argv) == 1:
+        print "usage: ./runner.py type:count:detail\nexamples:\n ./runner.py local:1\n ./runner.pl digitalocean:3:512mb"
+        sys.exit(1)
+    nodes = createNodes(sys.argv[1])
+    main(nodes)
