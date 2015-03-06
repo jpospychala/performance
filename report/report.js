@@ -20,6 +20,7 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
   $scope.tbl = opts.tbl || false;
   $scope.locked = opts.locked || false;
   $scope.groupBy = opts.groupBy;
+  $scope.loading = true;
 
   $scope.funcs.forEach(function(f) {
     if (opts[f.name]) {
@@ -38,6 +39,7 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
 
     $scope.$watch('y', switchHeader);
     $scope.$watch('x', setData);
+    $scope.loading = false;
   });
 
   function switchHeader() {
