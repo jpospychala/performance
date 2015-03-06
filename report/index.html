@@ -45,7 +45,7 @@
 <div ng-controller="DiagramCtrl">
   <input id="lock" type="checkbox" ng-model="locked" ng-click="toggleLock()"><label for="lock">Lock</label>
   <div ng-class="{locked: !locked}">
-    <h1 >{{y}} in function of {{x}}</h1>
+    <h1 >{{truthy(params["@config"]).join(' and ')}} {{y}} in function of {{x}}</h1>
     Configuration:
     <table>
       <tr ng-repeat="(param, values) in params">
