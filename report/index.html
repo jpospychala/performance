@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Report tool</title>
   <link rel="stylesheet" href="css/foundation.css" />
+  <link rel="stylesheet" href="css/font-awesome.min.css">
   <script src="js/vendor/modernizr.js"></script>
   <script src="lib/d3.v3.js"></script>
   <script src="lib/ramda.min.js"></script>
@@ -45,7 +46,7 @@
 <div ng-controller="DiagramCtrl">
   <div ng-show="loading"><img src="img/spinner.gif" alt="Loading...">Please wait....</div>
   <div ng-hide="loading">
-  <input id="lock" type="checkbox" ng-model="locked" ng-click="toggleLock()"><label for="lock">Lock</label>
+  <input id="lock" type="checkbox" ng-model="locked" ng-click="toggleLock()"><label for="lock"><i class="fa fa-lock"></i></label>
   <div ng-class="{locked: !locked}">
     <h1 >{{truthy(params["@config"]).join(' and ')}} {{y}} in function of {{x}}</h1>
     Configuration:
