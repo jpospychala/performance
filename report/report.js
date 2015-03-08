@@ -34,6 +34,7 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
 
   dataService.init().then(function(data) {
     $scope.headers = dataService.getHeaders(data);
+    $scope.headersX = ['n', 'time (ms)'];
     $scope.x = opts.x || $scope.headers[0];
     $scope.y = opts.y || $scope.headers[1];
 
