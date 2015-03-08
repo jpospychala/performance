@@ -1,6 +1,7 @@
 var app = angular.module('app', []);
 
 app.service('dataService', function($q) {
+  var results_base_url = 'http://jp-performance.s3-website.eu-central-1.amazonaws.com/perf/';
   var ignoredParams = ['MemTotal', 'bogomips', 'cpu cores', 'model name'];
   return new function() {
     var self = this;
@@ -71,7 +72,7 @@ app.service('dataService', function($q) {
       var i = -1;
       var xGet = valueFunc(x);
       var yGet = valueFunc(y);
-      d3.csv('../results/'+d.id+'/'+d.params.task+'.log')
+      d3.csv(results_base_url+d.id+'/'+d.params.task+'.log')
       .row(function (row) {
         i++;
         return {x: +xGet(row), y: +yGet(row) };
