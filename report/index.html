@@ -44,100 +44,106 @@
 <body>
 
 <div ng-controller="DiagramCtrl">
-  <div ng-show="loading"><img src="img/spinner.gif" alt="Loading...">Please wait....</div>
+  <div ng-show="loading"><img src="img/spinner.gif" alt="Loading...">Please wait....
+  </div>
   <div ng-hide="loading">
-  <input id="lock" type="checkbox" ng-model="locked" ng-click="toggleLock()"><label for="lock"><i class="fa fa-lock"></i></label>
-  <div ng-class="{locked: !locked}">
-    <h1 >{{truthy(params["@config"]).join(' and ')}} {{y}} in function of {{x}}</h1>
-    Configuration:
-    <table>
-      <tr ng-repeat="(param, values) in params">
-        <td>{{param}}: {{truthy(params[param]).join(', ')}}</td>
-      </tr>
-    </table>
-  </div>
-  <div id="params_table" ng-class="{locked: locked}">
-    <table>
-      <tr>
-        <td>Y<td/>
-        <td ng-repeat="header in headers">
-          <input type="radio" ng-model="$parent.y" ng-value="header"> {{header}}
-        </td>
-      </tr>
-    </table>
-    <table>
-      <tr ng-repeat="(param, values) in params">
-        <td><a href="" ng-click="toggleAll(param)">{{param}}</a></td>
-        <td ng-repeat="(key, value) in values">
-          <input type="checkbox" ng-checked="value" ng-click="toggle(param, key, value)"> {{key}}
-        </td>
-      </tr>
-    </table>
-    <div class="large-12 columns">
-      <input id="checkbox1" type="checkbox" ng-model="seriesd"><label for="checkbox1">Series diagram</label>
-      <input id="checkbox2" type="checkbox" ng-model="aggrd"><label for="checkbox2">Aggregate diagram</label>
-      <input id="checkbox3" type="checkbox" ng-model="tbl"><label for="checkbox3">Statistics table</label>
-    </div>
-  </div>
-
-  <div ng-show="aggrd">
-    <h2>{{selectedFuncs()}} of {{y}} in function of {{groupBy}}</h2>
-    <div ng-class="{locked: locked}">
+    <input id="lock" type="checkbox" ng-model="locked" ng-click="toggleLock()"><label for="lock"><i class="fa fa-lock"></i></label>
+    <div id="params_table" ng-class="{locked: locked}">
+      <table>
+        <tr>
+          <td>Y<td/>
+          <td ng-repeat="header in headers">
+            <input type="radio" ng-model="$parent.y" ng-value="header"> {{header}}
+          </td>
+        </tr>
+      </table>
+      <table>
+        <tr ng-repeat="(param, values) in params">
+          <td><a href="" ng-click="toggleAll(param)">{{param}}</a></td>
+          <td ng-repeat="(key, value) in values">
+            <input type="checkbox" ng-checked="value" ng-click="toggle(param, key, value)"> {{key}}
+          </td>
+        </tr>
+      </table>
       <div class="large-12 columns">
-        Group by:
-        <span ng-repeat="(param, values) in params">
-          <input type="radio" ng-model="$parent.groupBy" ng-value="param"> {{param}}
+        <input id="checkbox1" type="checkbox" ng-model="seriesd"><label for="checkbox1">Series diagram</label>
+        <input id="checkbox2" type="checkbox" ng-model="aggrd"><label for="checkbox2">Aggregate diagram</label>
+        <input id="checkbox3" type="checkbox" ng-model="tbl"><label for="checkbox3">Statistics table</label>
+      </div>
+    </div>
+    <div ng-class="{locked: !locked}">
+      <h1 >{{truthy(params["@config"]).join(' and ')}} {{y}} in function of {{x}}</h1>
+    </div>
+
+    <div ng-show="aggrd">
+      <h2>{{selectedFuncs()}} of {{y}} in function of {{groupBy}}</h2>
+      <div ng-class="{locked: locked}">
+        <div class="large-12 columns">
+          Group by:
+          <span ng-repeat="(param, values) in params">
+            <input type="radio" ng-model="$parent.groupBy" ng-value="param"> {{param}}
+          </span>
+        </div>
+        <div class="large-12 columns">
+          Function:
+          <span ng-repeat="f in funcs">
+            <input type="checkbox" ng-model="f.selected" ng-value="f.name"> {{f.label}}
+          </span>
+        </div>
+        <input id="checkbox4" type="checkbox" ng-model="showAggregateTable"><label for="checkbox4">Data table</label>
+      </div>
+      <table border="1" ng-show="showAggregateTable">
+        <tr>
+          <td>Label</td>
+        </tr>
+        <tr ng-repeat="(hash, serie) in seriesByFunc">
+          <td>{{serie.name}}</td>
+          <td ng-repeat="o in serie.values">{{o.x}}, {{o.y}}</td>
+        </tr>
+      </table>
+      <div id="aggrDiagram"></div>
+    </div>
+
+    <div ng-show="seriesd">
+      <h2>Series</h2>
+      <div class="large-12 columns" ng-class="{locked: locked}">
+      X axis:
+        <span ng-repeat="header in headersX">
+          <input type="radio" ng-model="$parent.x" ng-value="header"> {{header}}
         </span>
       </div>
-      <div class="large-12 columns">
-        Function:
-        <span ng-repeat="f in funcs">
-          <input type="checkbox" ng-model="f.selected" ng-value="f.name"> {{f.label}}
-        </span>
-      </div>
-      <input id="checkbox4" type="checkbox" ng-model="showAggregateTable"><label for="checkbox4">Data table</label>
-    </div>
-    <table border="1" ng-show="showAggregateTable">
-      <tr>
-        <td>Label</td>
-      </tr>
-      <tr ng-repeat="(hash, serie) in seriesByFunc">
-        <td>{{serie.name}}</td>
-        <td ng-repeat="o in serie.values">{{o.x}}, {{o.y}}</td>
-      </tr>
-    </table>
-    <div id="aggrDiagram"></div>
-  </div>
 
-  <div ng-show="seriesd">
-    <h2>Series</h2>
-    <div class="large-12 columns" ng-class="{locked: locked}">
-    X axis:
-      <span ng-repeat="header in headersX">
-        <input type="radio" ng-model="$parent.x" ng-value="header"> {{header}}
-      </span>
+      <div id="seriesDiagram"></div>
     </div>
 
-    <div id="seriesDiagram"></div>
-  </div>
+    <div id="summary_table" ng-show="tbl">
+      <h2>Series statistics</h2>
+      <table>
+        <thread>
+          <tr>
+            <th colspan="{{R.keys(params).length}}">Configuration parameters</th>
+            <th colspan="{{funcs.length}}">Run stats</th>
+          </tr>
+          <tr>
+            <th ng-repeat="(param, values) in params">{{param}}</th>
+            <th ng-repeat="f in funcs">{{f.label}}</th>
+          </tr>
+        </thread>
+        <tr ng-repeat="serie in series">
+          <td ng-repeat="(param, values) in params">{{serie.params[param]}}</td>
+          <td ng-repeat="f in funcs">{{serie[f.name]}}</td>
+        </tr>
+      </table>
+    </div>
 
-  <div id="summary_table" ng-show="tbl">
-    <h2>Series statistics</h2>
-    <table border="1">
-      <tr>
-        <th colspan="{{R.keys(params).length}}">Configuration parameters</th>
-        <th colspan="{{funcs.length}}">Run stats</th>
-      </tr>
-      <tr>
-        <th ng-repeat="(param, values) in params">{{param}}</th>
-        <th ng-repeat="f in funcs">{{f.label}}</th>
-      </tr>
-      <tr ng-repeat="serie in series">
-        <td ng-repeat="(param, values) in params">{{serie.params[param]}}</td>
-        <td ng-repeat="f in funcs">{{serie[f.name]}}</td>
-      </tr>
-    </table>
-  </div>
+    <div ng-class="{locked: !locked}">
+      <h2>Configuration</h2>
+      <table>
+        <tr ng-repeat="(param, values) in params">
+          <td>{{param}}: {{truthy(params[param]).join(', ')}}</td>
+        </tr>
+      </table>
+    </div>
   </div>
 </div>
 
