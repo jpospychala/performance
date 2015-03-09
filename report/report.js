@@ -3,7 +3,8 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
   $scope.l12n =
   $scope.human = function(msg) {
     var h = {
-      'n': 'sent messages (n)'
+      'n': 'sent messages (n)',
+      'count/(max-min)': 'messages/ms'
     };
     return h[msg] || msg;
   }
