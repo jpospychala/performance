@@ -10,7 +10,7 @@ function Diagram(selector) {
       bottom: 50,
       left: 50
     },
-    width = 1260 - margin.left - margin.right,
+    width = 1060 - margin.left - margin.right,
     height = 550 - margin.top - margin.bottom;
 
   var x = d3.scale.linear()

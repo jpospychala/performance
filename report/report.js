@@ -1,5 +1,12 @@
 app.controller('DiagramCtrl', function($scope, dataService, $location) {
   $scope.R = R;
+  $scope.l12n =
+  $scope.human = function(msg) {
+    var h = {
+      'n': 'sent messages (n)'
+    };
+    return h[msg] || msg;
+  }
   $scope.funcs = [
     {name: "min", label: "min", selected: false },
     {name: "max", label: "max", selected: false },
@@ -77,6 +84,7 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
   }
   $scope.toggleLock = function() {
     $scope.locked = !$scope.locked;
+    setSearch();
   }
 
   $scope.toggle = function(param, key, value) {
@@ -96,7 +104,7 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
   }
 
   function setData() {
-    var uniqueParams = Object.keys($scope.params).filter(function(param) {
+    $scope.uniqueParams = Object.keys($scope.params).filter(function(param) {
       return R.values($scope.params[param]).filter(R.eq(true)).length > 1;
     });
 
@@ -128,7 +136,7 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
       .forEach(function(d) {
         funcs
         .forEach(function(f) {
-          var significantParams = R.pick(uniqueParams, R.omit([$scope.groupBy], d.params));
+          var significantParams = R.pick($scope.uniqueParams, R.omit([$scope.groupBy], d.params));
           if (funcs.length > 1) {
             significantParams = R.mixin(significantParams, {func:f.label});
           }
@@ -154,7 +162,7 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
     }
 
     function label(d) {
-      var params = R.pick(uniqueParams, d.params);
+      var params = R.pick($scope.uniqueParams, d.params);
       return hash(params);
     }
 
@@ -177,32 +185,32 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
       }
       return ret;
     }
+  }
 
-    function setSearch() {
-      var opts = {
-        x: $scope.x,
-        y: $scope.y,
-      };
-      ['seriesd', 'aggrd', 'tbl', 'locked', 'groupBy'].forEach(function(key) {
-        if ($scope[key]) {
-          opts[key] = true;
+  function setSearch() {
+    var opts = {
+      x: $scope.x,
+      y: $scope.y,
+    };
+    ['seriesd', 'aggrd', 'tbl', 'locked', 'groupBy'].forEach(function(key) {
+      if ($scope[key]) {
+        opts[key] = true;
+      }
+    });
+    Object.keys($scope.params)
+    .sort()
+    .forEach(function(p) {
+      Object.keys($scope.params[p]).forEach(function(key) {
+        if ($scope.params[p][key]) {
+          opts[p+key]=true;
         }
       });
-      Object.keys($scope.params)
-      .sort()
-      .forEach(function(p) {
-        Object.keys($scope.params[p]).forEach(function(key) {
-          if ($scope.params[p][key]) {
-            opts[p+key]=true;
-          }
-        });
-      });
-      $scope.funcs.forEach(function(f) {
-        if (f.selected) {
-          opts[f.name] = true;
-        }
-      });
-      $location.search(opts);
-    }
+    });
+    $scope.funcs.forEach(function(f) {
+      if (f.selected) {
+        opts[f.name] = true;
+      }
+    });
+    $location.search(opts);
   }
 });
