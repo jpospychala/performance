@@ -76,6 +76,7 @@ function Diagram(selector) {
         return d3.max(c.values, ramda.path('x'));
       })
     ]);
+    x.nice(10);
     y.domain([
       d3.min(series, function(c) {
         return d3.min(c.values, ramda.path('y'));
@@ -84,6 +85,7 @@ function Diagram(selector) {
         return d3.max(c.values, ramda.path('y'));
       })
     ]);
+    y.nice(10);
 
     svg.selectAll("*").remove();
     svg.append("g")
