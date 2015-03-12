@@ -29,6 +29,14 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
   $scope.locked = opts.locked || false;
   $scope.groupBy = opts.groupBy;
   $scope.loading = true;
+  if (opts.q) {
+    var list = [];
+    for (var i = 0; i < opts.q.length/32; i++) {
+      list[i] = opts.q.substr(32*i, 32);
+    }
+    $scope.keys = list;
+    $scope.doExport = true;
+  }
 
   $scope.funcs.forEach(function(f) {
     if (opts[f.name]) {
@@ -40,7 +48,7 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
   d.drawDots = false;
   var d2 = new Diagram("#aggrDiagram");
 
-  dataService.init().then(function(data) {
+  dataService.init($scope.keys).then(function(data) {
     $scope.headers = dataService.getHeaders(data);
     $scope.headersX = ['n', 'time (ms)'];
     $scope.x = opts.x || $scope.headers[0];
@@ -74,6 +82,16 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
     $scope.params = newParams;
   }
 
+  $scope.allParams = function() {
+    var p = dataService.getParamsForHeader($scope.y, true);
+    Object.keys(p).forEach(function(param) {
+      if ($scope.params[param]) {
+        p[param] = $scope.params[param];
+      }
+    });
+    return p;
+  }
+
   $scope.truthy = function(objWithProps) {
     return R.toPairs(objWithProps).filter(function(prop) {
       return prop[1] === true;
@@ -91,7 +109,8 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
   $scope.toggle = function(param, key, value) {
     $scope.params[param][key] = !value;
     setData();
-  };
+  }
+
   $scope.toggleAll = function(param) {
     var truthyCount = 0;
     Object.keys($scope.params[param]).forEach(function(key) {
@@ -104,6 +123,12 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
     setData();
   }
 
+  $scope.export = function() {
+    $scope.doExport = true;
+    $scope.locked = true;
+    setSearch();
+  }
+
   function setData() {
     $scope.uniqueParams = Object.keys($scope.params).filter(function(param) {
       return R.values($scope.params[param]).filter(R.eq(true)).length > 1;
@@ -111,6 +136,7 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
 
     var newData = dataService.dataForParams($scope.params, $scope.y)
       .map(transformToSeries);
+    $scope.keys = newData.map(function(serie) {return serie.id; });
 
     if ($scope.tbl) {
       $scope.series = newData;
@@ -193,9 +219,17 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
       x: $scope.x,
       y: $scope.y,
     };
+    if ($scope.doExport) {
+      opts.q = $scope.keys.join('');
+    }
     ['seriesd', 'aggrd', 'tbl', 'locked', 'groupBy'].forEach(function(key) {
       if ($scope[key]) {
         opts[key] = true;
+      }
+    });
+    $scope.funcs.forEach(function(f) {
+      if (f.selected) {
+        opts[f.name] = true;
       }
     });
     Object.keys($scope.params)
@@ -206,11 +240,6 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
           opts[p+key]=true;
         }
       });
-    });
-    $scope.funcs.forEach(function(f) {
-      if (f.selected) {
-        opts[f.name] = true;
-      }
     });
     $location.search(opts);
   }

@@ -6,22 +6,44 @@ app.service('dataService', function($q) {
   return new function() {
     var self = this;
 
-    self.init = function() {
+    self.init = function(list) {
+      if (list) {
+        return initFromList(list);
+      } else {
+        return initFromResult();
+      }
+    }
+
+    function initFromList(list) {
+      return $q.all(list.map(function(listEntry) {
+        return getJSON(results_base_url+listEntry+'/json');
+      }))
+      .then(function(data) {
+        self.data = R.flatten(data);
+        return self.data;
+      });
+    }
+
+    function initFromResult() {
+      return getJSON("result.json")
+      .then(function(data) {
+        self.data = data;
+        return data;
+      });
+    };
+
+    function getJSON(url) {
       var deferred = $q.defer();
 
-      d3.json("result.json", function(error, data) {
+      d3.json(url, function(error, data) {
         if (error) {
           deferred.reject(error);
           return;
         }
-
-        self.data = data;
-        deferred.resolve(self.data);
+        deferred.resolve(data);
       });
-
       return deferred.promise;
-    };
-
+    }
     self.getHeaders = function(data) {
       var headers = ['n'];
       data.forEach(function(d) {
@@ -35,9 +57,10 @@ app.service('dataService', function($q) {
     };
 
 
-    self.getParamsForHeader = function(headerName) {
+    self.getParamsForHeader = function(headerName, allParams) {
       var data = withHeader(headerName);
-      return findParams(data);
+      var uniqueOnly = !allParams;
+      return findParams(data, uniqueOnly);
     };
 
 
@@ -97,7 +120,7 @@ app.service('dataService', function($q) {
       }, self.data);
     };
 
-    function findParams(data) {
+    function findParams(data, uniqueOnly) {
       var params = {};
       data.forEach(function(d) {
         Object.keys(d.params).forEach(function(param) {
@@ -114,7 +137,7 @@ app.service('dataService', function($q) {
         });
       });
       Object.keys(params).forEach(function(param) {
-        if (Object.keys(params[param]).length <= 1) {
+        if (uniqueOnly && (Object.keys(params[param]).length <= 1)) {
           delete params[param];
         }
       });
