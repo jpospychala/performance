@@ -150,15 +150,16 @@
           </tr>
         </thead>
         <tbody>
-          <tr ng-repeat="(param, values) in allParams()">
+          <tr ng-repeat="(param, values) in params">
             <td>{{param}}</td><td>{{truthy(values).join(', ')}}</td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <i class="fa" ng-class="{'fa-lock': locked, 'fa-unlock': !locked}" ng-click="toggleLock()"></i>
-    <a ng-click="export()" ng-show="!locked" ng-hide="doExport">Export</a>
+    <div ng-show="!locked">
+      <a ng-href="{{export()}}" target="_blank">Export</a>
+    </div>
   </div>
 </div>
 

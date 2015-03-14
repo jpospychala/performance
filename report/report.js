@@ -26,7 +26,6 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
   $scope.seriesd = opts.seriesd || false;
   $scope.aggrd = opts.aggrd || false;
   $scope.tbl = opts.tbl || false;
-  $scope.locked = opts.locked || false;
   $scope.groupBy = opts.groupBy;
   $scope.loading = true;
   if (opts.q) {
@@ -35,7 +34,9 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
       list[i] = opts.q.substr(32*i, 32);
     }
     $scope.keys = list;
-    $scope.doExport = true;
+    $scope.locked = true;
+  } else {
+    $scope.locked = false;
   }
 
   $scope.funcs.forEach(function(f) {
@@ -60,7 +61,17 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
   });
 
   function switchHeader() {
-    var newParams = dataService.getParamsForHeader($scope.y);
+/*
+        if ($scope.keys) {
+          var p = dataService.getParamsForHeader($scope.y, true);
+          Object.keys(p).forEach(function(param) {
+            if ($scope.params[param]) {
+              p[param] = $scope.params[param];
+            }
+          });
+          $scope.allParams = p;
+        }*/
+    var newParams = dataService.getParamsForHeader($scope.y, $scope.locked);
     if ($scope.params) {
       Object.keys($scope.params).forEach(function(param) {
         if (newParams[param]) {
@@ -74,22 +85,17 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
       });
     }
 
-    Object.keys(newParams).forEach(function(param) {
-      Object.keys(newParams[param]).forEach(function(key) {
-        newParams[param][key] = (opts[param+key] === true);
+    if ($scope.locked) {
+      Object.keys(newParams).forEach(function(param) {
+        if (opts[param]) {
+          var toEnable = opts[param].split(',');
+          Object.keys(newParams[param]).forEach(function(key) {
+            newParams[param][key] = (toEnable.indexOf(key) > -1)
+          });
+        }
       });
-    });
+    }
     $scope.params = newParams;
-  }
-
-  $scope.allParams = function() {
-    var p = dataService.getParamsForHeader($scope.y, true);
-    Object.keys(p).forEach(function(param) {
-      if ($scope.params[param]) {
-        p[param] = $scope.params[param];
-      }
-    });
-    return p;
   }
 
   $scope.truthy = function(objWithProps) {
@@ -100,10 +106,6 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
   }
   $scope.selectedFuncs = function() {
     return $scope.funcs.filter(R.path('selected')).map(R.path('label')).join(' and ');
-  }
-  $scope.toggleLock = function() {
-    $scope.locked = !$scope.locked;
-    setSearch();
   }
 
   $scope.toggle = function(param, key, value) {
@@ -124,9 +126,14 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
   }
 
   $scope.export = function() {
-    $scope.doExport = true;
-    $scope.locked = true;
-    setSearch();
+    var search = calculateSearch({q: $scope.keys.join('') });
+    var opts = [];
+    Object.keys(search).forEach(function(key) {
+      opts.push(key+'='+search[key]);
+    });
+    var searchStr = opts.join('&');
+    var baseUrl = $location.absUrl().replace(/#.*/, "");
+    return baseUrl + '#?' + searchStr;
   }
 
   function setData() {
@@ -153,8 +160,6 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
         d.setData(newData, $scope.x, $scope.y);
       });
     }
-
-    setSearch();
 
     function calculateSeriesByFunc(data) {
       var out = {};
@@ -214,14 +219,10 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
     }
   }
 
-  function setSearch() {
-    var opts = {
-      x: $scope.x,
-      y: $scope.y,
-    };
-    if ($scope.doExport) {
-      opts.q = $scope.keys.join('');
-    }
+  function calculateSearch(opts) {
+    var opts = opts || {};
+    opts.x = $scope.x;
+    opts.y = $scope.y;
     ['seriesd', 'aggrd', 'tbl', 'locked', 'groupBy'].forEach(function(key) {
       if ($scope[key]) {
         opts[key] = true;
@@ -232,15 +233,11 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
         opts[f.name] = true;
       }
     });
-    Object.keys($scope.params)
-    .sort()
-    .forEach(function(p) {
-      Object.keys($scope.params[p]).forEach(function(key) {
-        if ($scope.params[p][key]) {
-          opts[p+key]=true;
-        }
-      });
+    ['task'].forEach(function(p) {
+      opts[p] = Object.keys($scope.params[p]).filter(function(key) {
+        return $scope.params[p][key];
+      }).join(',');
     });
-    $location.search(opts);
+    return opts;
   }
 });
