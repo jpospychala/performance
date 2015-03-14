@@ -57,10 +57,10 @@ app.service('dataService', function($q) {
     };
 
 
-    self.getParamsForHeader = function(headerName, allParams) {
+    self.getParamsForHeader = function(headerName, allParams, defaultValue) {
       var data = withHeader(headerName);
       var uniqueOnly = !allParams;
-      return findParams(data, uniqueOnly);
+      return findParams(data, uniqueOnly, defaultValue);
     };
 
 
@@ -120,7 +120,8 @@ app.service('dataService', function($q) {
       }, self.data);
     };
 
-    function findParams(data, uniqueOnly) {
+    function findParams(data, uniqueOnly, defaultValue) {
+      defaultValue = defaultValue || false;
       var params = {};
       data.forEach(function(d) {
         Object.keys(d.params).forEach(function(param) {
@@ -132,7 +133,7 @@ app.service('dataService', function($q) {
             params[param] = {};
           }
           if (params[param][newVal] === undefined) {
-            params[param][newVal] = true;
+            params[param][newVal] = defaultValue;
           }
         });
       });

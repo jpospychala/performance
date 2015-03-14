@@ -61,17 +61,7 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
   });
 
   function switchHeader() {
-/*
-        if ($scope.keys) {
-          var p = dataService.getParamsForHeader($scope.y, true);
-          Object.keys(p).forEach(function(param) {
-            if ($scope.params[param]) {
-              p[param] = $scope.params[param];
-            }
-          });
-          $scope.allParams = p;
-        }*/
-    var newParams = dataService.getParamsForHeader($scope.y, $scope.locked);
+    var newParams = dataService.getParamsForHeader($scope.y, $scope.locked, $scope.locked);
     if ($scope.params) {
       Object.keys($scope.params).forEach(function(param) {
         if (newParams[param]) {
@@ -126,7 +116,7 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
   }
 
   $scope.export = function() {
-    var search = calculateSearch({q: $scope.keys.join('') });
+    var search = calculateSearch({q: $scope.keys && $scope.keys.join('') });
     var opts = [];
     Object.keys(search).forEach(function(key) {
       opts.push(key+'='+search[key]);
@@ -234,9 +224,14 @@ app.controller('DiagramCtrl', function($scope, dataService, $location) {
       }
     });
     ['task'].forEach(function(p) {
-      opts[p] = Object.keys($scope.params[p]).filter(function(key) {
-        return $scope.params[p][key];
-      }).join(',');
+      if ($scope.params[p]) {
+        var selectedVals = Object.keys($scope.params[p]).filter(function(key) {
+          return $scope.params[p][key];
+        });
+        if (selectedVals) {
+          opts[p] = selectedVals.join(',');
+        }
+      }
     });
     return opts;
   }
