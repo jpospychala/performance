@@ -45,7 +45,7 @@ app.service('dataService', function($q) {
       return deferred.promise;
     }
     self.getHeaders = function(data) {
-      var headers = ['n'];
+      var headers = [];
       data.forEach(function(d) {
         d.headers.forEach(function(header) {
           if (headers.indexOf(header) == -1) {
