@@ -76,6 +76,22 @@
         <h2>{{truthy(params["@config"]).join(' and ')}} {{y}} in function of {{human(x)}}</h2>
       </div>
     </div>
+      <div ng-class="{locked: !locked}" class="row">
+        <h3>Configuration details</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Param</th>
+              <th>Value(s)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="(param, values) in params">
+              <td>{{param}}</td><td>{{truthy(values).join(', ')}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
     <div ng-show="aggrd">
       <h2>{{selectedFuncs()}} of {{y}} in function of {{groupBy}}</h2>
@@ -135,23 +151,6 @@
           <tr ng-repeat="serie in series">
             <td ng-repeat="(param, values) in R.pick(uniqueParams, params)">{{serie.params[param]}}</td>
             <td ng-repeat="f in funcs">{{serie[f.name].toFixed(2)}}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div ng-class="{locked: !locked}" class="row">
-      <h3>Configuration details</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Param</th>
-            <th>Value(s)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr ng-repeat="(param, values) in params">
-            <td>{{param}}</td><td>{{truthy(values).join(', ')}}</td>
           </tr>
         </tbody>
       </table>
