@@ -2,7 +2,7 @@ var app = angular.module('app', []);
 
 app.service('dataService', function($q) {
   var results_base_url = 'http://jp-performance.s3-website.eu-central-1.amazonaws.com/perf/';
-  var ignoredParams = ['MemTotal', 'bogomips', 'cpu cores', 'model name'];
+  var ignoredParams = ['MemTotal', 'bogomips', 'cpu cores', 'model name', 'n', 'queue'];
   return new function() {
     var self = this;
 
