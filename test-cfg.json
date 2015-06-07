@@ -1,12 +1,20 @@
 {
   "sleep_node": {
-    "workdir": "sleep",
+    "workdir": "./sleep/node",
     "tasks": {
       "sleep": {"cmd": ["node", "./count.js"]}
     },
     "options": {
-      "n": [2, 1],
-      "time": [0, 5, 10, 50, 100]
+      "n": [2, 10],
+      "time": [0, 5, 10, 50]
+    }
+  },
+  "always_failing": {
+    "tasks": {
+      "not_existent_cmd": {"cmd": ["./not_existent"]}
+    },
+    "options": {
+
     }
   },
   "sleep_c": {
