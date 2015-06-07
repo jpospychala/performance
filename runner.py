@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import simplejson
 import datetime
 import digitalocean
 import itertools
@@ -72,21 +73,21 @@ class Runner:
         self.ready = True
 
     def extract_missing_only(self, variants):
-        print "extract_missing_only start"
         start = time.time()
         missing = []
 
         lastKeys = None
+        lastKeysHash = None
         reportFilteredKeys = []
         for v in variants:
-            keysId = id(sorted(v.keys()))
-            if keysId != lastKeys:
-                lastKeys = keysId
+            keysHash = id(sorted(v.keys()))
+            if keysHash != lastKeysHash:
+                lastKeys = sorted(v.keys())
+                lastKeysHash = keysHash
                 reportFilteredKeys = set([self.vid({ k: r['params'].get(k, None) for k in lastKeys }) for r in self.report])
 
             if not self.vid(v) in reportFilteredKeys:
                 missing.append(v)
-        print "extract_missing_only end {0}".format(time.time() - start)
         return missing
 
     def vid(self, obj):
@@ -175,6 +176,8 @@ class HostRunner(threading.Thread):
         ret = run_variant(self.node.addr, v['v'])
         if 'error' in ret:
             print "{0}: failed {1}: {2}".format(self.node.name, v['v'], ret['error'])
+            get_log(self.node.addr, ret['id'], 'log')
+            cat_log(ret['id'])
             v['retries'] = v.get('retries', 0) + 1
             if v['retries'] > 5:
                 v['status'] = 'Failed'
@@ -197,17 +200,28 @@ def set_name(addr,name):
     requests.post('http://{0}/name'.format(addr), headers=headers, data=data)
 
 
+def cat_log(id):
+    with open('results/{0}/log.log'.format(id), 'r') as f:
+        for l in f:
+            print 'log: ', l
+
+
 def get_log(addr, id, task):
     logdir = 'results/{0}'.format(id)
     if not os.path.exists(logdir):
       os.makedirs(logdir)
+    text = requests.get('http://{0}/log/{1}/{2}'.format(addr, id, task)).text
     with open('{0}/{1}.log'.format(logdir, task), 'w') as f:
-        f.write(requests.get('http://{0}/log/{1}/{2}'.format(addr, id, task)).text)
+        f.write(text)
 
 def run_variant(addr, v):
     data = json.dumps(v)
     headers = {'Content-Type': 'application/json'}
-    return requests.post('http://{0}/run'.format(addr), headers=headers, data=data).json()
+    ret = requests.post('http://{0}/run'.format(addr), headers=headers, data=data)
+    try:
+        return ret.json()
+    except simplejson.JSONDecodeError as e:
+        raise e
 
 
 def createNodes(argsstr):
