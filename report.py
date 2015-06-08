@@ -8,10 +8,17 @@ import functools
 import numpy
 import time
 
-postProcess = [{
-    "task": "sleep",
-    "header": "latency",
-    "fn": lambda row, count, cfg: int(row[0]) - int(cfg["params"]["time"])
+postProcess = [
+    {
+        "task": "sleep",
+        "header": "latency (ms)",
+        "fn": lambda row, count, cfg: int(row[0]) - int(cfg["params"]["time"])
+    },
+    {
+        "task": "consumer",
+        "product": "rabbitmq",
+        "header": "throughput (ms)",
+        "fn": lambda row, count, cfg: 0 if d[0]== 0 else math.round(count*1000/(d[0]))
     }
 ]
 
