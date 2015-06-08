@@ -6,6 +6,14 @@ import os
 import math
 import functools
 import numpy
+import time
+
+postProcess = [{
+    "task": "sleep",
+    "header": "latency",
+    "fn": lambda row, count, cfg: int(row[0]) - int(cfg["params"]["time"])
+    }
+]
 
 def main(srcdir):
     try:
@@ -19,35 +27,42 @@ def main(srcdir):
             index = json.load(f)
     except:
         index = []
+    reportHas = set(["{0}{1}".format(e['id'], e['task']) for e in report])
 
     i = 0
     for entry in index:
         i += 1
         sys.stderr.write('\b\b\b\b{:0>3d}%'.format(i*100/len(index)))
 
-        if reportHas(report, entry):
+        if "{0}{1}".format(entry['id'], entry['task']) in reportHas:
             continue
 
-        logPath = 'results/{0}/{1}.log'.format(entry["id"], entry["params"]["task"])
+        logPath = 'results/{0}/{1}.log'.format(entry["id"], entry["task"])
         try:
             headers, values = readLog(logPath)
-        except RuntimeError as ex:
+        except BaseException as ex:
             sys.stderr.write("skipping {0} {1}\n".format(entry, ex))
             continue
 
-        stats = []
         doContinue = False
+        v_i = 0
         for v in values:
             if len(v) == 0:
                 sys.stderr.write("skipping/no values {0}\n".format(entry))
                 doContinue = True
                 break
-            stats.append(calculateStats(v))
+            entry["dimension"] = headers[v_i]
+            entry["stats"] = calculateStats(v)
+            report.append(entry.copy())
         if doContinue:
             continue
-
-        entry.update({"headers": headers, "stats": stats})
-        report.append(entry)
+        for pp in postProcess:
+            if pp["task"] == entry["task"]:
+                vByCols = colsByRowsToRowsByCols(values)
+                pp_v = [pp["fn"](d, len(vByCols), entry) for d in vByCols]
+                entry["dimension"] = pp["header"]
+                entry["stats"] = calculateStats(pp_v)
+                report.append(entry.copy())
 
         if (i % 100) == 0:
             with open('report/result.json', 'w') as f:
@@ -57,11 +72,13 @@ def main(srcdir):
         json.dump(report, f)
 
 
-def reportHas(report, e):
-    for entry in report:
-        if entry["id"] == e["id"] and entry["params"]["task"] == e["params"]["task"]:
-            return True
-    return False
+def colsByRowsToRowsByCols(values):
+    ret = []
+    for i in range(len(values[0])):
+        row = [values[col][i] for col in range(len(values))]
+        ret.append(row)
+    return ret
+
 
 def calculateStats(v):
     v.sort()
@@ -75,11 +92,6 @@ def calculateStats(v):
     stats["q3"] = percentile(v, 0.75)
     stats["q9"] = percentile(v, 0.90)
     stats["q99"] = percentile(v, 0.99)
-    d = (v[-1] - v[0])
-    if d > 0:
-        stats["throughput"] = len(v)*1.0/d
-    else:
-        stats["throughput"] = 0
     return stats
 
 
@@ -97,21 +109,24 @@ def percentile(v, percent):
 def readLog(path):
     headers = []
     values = []
-    with open(path, 'r') as f, open('tmprewr', 'w+') as w:
+    with open(path, 'r') as f:
         headersLine = f.next()
-        w.write(headersLine)
         headers = headersLine.strip().split(',')
         for i in range(len(headers)):
             values.append([])
         for line in f:
             if line == headersLine:
                 continue
-            w.write(line)
+            if len(line.strip()) == 0:
+                continue
             j = 0
             for x in line.split(','):
-                values[j].append(int(x))
+                try:
+                    values[j].append(float(x))
+                except ValueError as ex:
+                    print "problem in column {0} in line '{1}' in file {2}\n".format(j, line, path);
+                    raise ex
                 j += 1
-    os.rename('tmprewr', path)
     return headers, values
 
 
