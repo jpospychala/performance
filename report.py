@@ -15,6 +15,13 @@ postProcess = [{
     }
 ]
 
+actualCoresCountMap =  {
+    'digitalocean512mb': '1',
+    'digitalocean2gb': '2',
+    'digitalocean16gb': '8',
+    'local0': '2'
+}
+
 def main(srcdir):
     try:
         with open('report/result.json', 'r') as f:
@@ -46,6 +53,8 @@ def main(srcdir):
 
         doContinue = False
         v_i = 0
+        if entry["sysinfo"]["oslabel"] in actualCoresCountMap:
+            entry["sysinfo"]["cpu cores"] = actualCoresCountMap[entry["sysinfo"]["oslabel"]]
         for v in values:
             if len(v) == 0:
                 sys.stderr.write("skipping/no values {0}\n".format(entry))
