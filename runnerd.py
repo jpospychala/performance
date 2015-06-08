@@ -160,9 +160,9 @@ class Runner:
 
     def build(self, config, logFile):
         self.verbose("build")
-        if config['config']['@config'] in self.built:
+        if config['@config'] in self.built:
             return
-        self.built.append(config['config']['@config'])
+        self.built.append(config['@config'])
         if self.options["doBuild"] and "build" in config:
             self.verbose("build")
             ret = subprocess.call(config["build"], cwd=config.get("workdir"), stdout=logFile, stderr=logFile)
@@ -172,7 +172,7 @@ class Runner:
 
     def beforeAll(self, config, logFile):
         self.verbose("beforeAll")
-        if self.lastRanConfig is not None and config['config']['@config'] == self.lastRanConfig['config']['@config']:
+        if self.lastRanConfig is not None and config['@config'] == self.lastRanConfig['@config']:
             return
         self.lastRanConfig = config
         if not self.options["dryRun"] and "before" in config:
@@ -186,7 +186,7 @@ class Runner:
         self.verbose("afterAll {0} {1}".format(self.lastRanConfig, next))
         if self.lastRanConfig is None:
             return
-        if next is not None and next['config']['@config'] == self.lastRanConfig['config']['@config']:
+        if next is not None and next['@config'] == self.lastRanConfig['@config']:
             return
         if not self.options["dryRun"] and "after" in self.lastRanConfig:
             self.verbose("afterAll")
@@ -250,8 +250,9 @@ class Runner:
         cfgName = variant['@config']
         config = self.configFile[cfgName]
         c = config.copy()
+        c['@config'] = cfgName
         c.update({"config": variant})
-        c['config'].update(self.info)
+        del c['config']['@config']
         return c
 
 
@@ -328,7 +329,9 @@ class Runner:
         else:
             processesList = processesToWait
         for i in range(threadsCount):
-          p = subprocess.Popen(t["cmd"] + params(config), stdout=logPathF, stderr=logFile, cwd=cwd)
+          cmdLine = t["cmd"] + params(config)
+          self.verbose("run command: "+" ".join(cmdLine))
+          p = subprocess.Popen(cmdLine, stdout=logPathF, stderr=logFile, cwd=cwd)
           processesList.append(p)
 
       try:
@@ -345,9 +348,7 @@ class Runner:
 
       result = []
       for task, path in logPaths.items():
-          p = config["config"].copy()
-          p.update({"task": task})
-          result.append({"id": id, "params": p})
+          result.append({"id": id, "@config": config['@config'], "task": task, "params": config["config"], "sysinfo": self.info})
       return result
 
     def tailLog(self, lines=100):

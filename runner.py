@@ -185,7 +185,7 @@ class HostRunner(threading.Thread):
                 v['status'] = 'Todo'
         else:
             for task in ret['result']:
-                get_log(self.node.addr, task['id'], task['params']['task'])
+                get_log(self.node.addr, task['id'], task['task'])
             self.runner.add_to_index(ret['result'])
             v['status'] = 'Done'
 
