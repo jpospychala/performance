@@ -1,14 +1,35 @@
 var fs = require('fs');
 
-console.log('load (1min),mem use (kB)');
+console.log('cpu user,cpu nice,cpu system,cpu idle,cpu iowait,mem used (MB),mem cached (MB)');
 
+var now = Date.now();
+var cpuLoad0 = cpuLoad();
 setInterval(measure, 1000);
 
 function measure() {
-  var loadStr = fs.readFileSync('/proc/loadavg').toString();
-  var memStr = fs.readFileSync('/proc/meminfo').toString();
+  console.log(cpuLoadDyn()+','+memUse());
+}
 
-  var load = loadStr.trim().split(' ');
+function cpuLoad() {
+  var loadStr = fs.readFileSync('/proc/stat').toString();
+  var load = loadStr.split('\n')[0].split(' ').slice(2, 7).map(function(n) {return 1*n});
+  return load;
+}
+
+function cpuLoadDyn() {
+  var then = Date.now();
+  var load = cpuLoad();
+  var ret = [];
+  for (var i = 0; i < load.length; i++) {
+    ret[i] = Math.round((load[i] - cpuLoad0[i]) * 1000 / (then - now));
+  }
+  now = then;
+  cpuLoad0 = load;
+  return ret;
+}
+
+function memUse() {
+  var memStr = fs.readFileSync('/proc/meminfo').toString();
   var mem = {}
   memStr.split('\n').map(function(l) {
     return l.split(':').map(function(f) {return f.trim()});
@@ -17,5 +38,5 @@ function measure() {
   .forEach(function(entry) {
     mem[entry[0]] = +entry[1].split(' ')[0];
   });
-  console.log(load[0]+','+(mem.MemTotal-mem.MemFree-mem.Cached));
+  return Math.round((mem.MemTotal-mem.MemFree)/1024)+','+Math.round(mem.Cached/1024);
 }
