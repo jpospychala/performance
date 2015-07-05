@@ -41,19 +41,15 @@ Launching benchmars on DigitalOcean:
 ------------------------------------
 
 To make the tests repeatable, there's script that automates their invocation on
- DigitalOcean droplets. It requires an account in DO and DO API key available
- in environment as $DOTOKEN. Example usage:
+ DigitalOcean droplets. It requires an account on DO and DO API key available
+ in environment variable $DOTOKEN. Example usage:
 
  ```bash
 $ env | grep DOTOKEN
 DOTOKEN=4db445b9gf4034jsdldalsdk23232b269k123123uf9hq8293ds
-$ ./digitalocean.sh run node1 rabbitmq_java 512m
-# creates DigitalOcean droplet "node1" with size 512m
-# executes rabbitmq_java benchmarks
-# downloads benchmark results to DROPLETID.tar.gz
-$ ./digitalocean.sh stop node1
-# destroys "node1" droplet
-$ tar -zxf DROPLETID.tar.gz
+$ ./runner.py digitalocean:3:512m
+# creates 3 DigitalOcean droplets with size 512m
+# executes all benchmarks
 $ ./report.py results/
 # generates statistical data for newly obtained results
 #
