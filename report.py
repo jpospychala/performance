@@ -62,23 +62,23 @@ def main(srcdir):
         v_i = 0
         if entry["sysinfo"]["oslabel"] in actualCoresCountMap:
             entry["sysinfo"]["cpu cores"] = actualCoresCountMap[entry["sysinfo"]["oslabel"]]
+        entry["stats"] = {}
         for v in values:
             if len(v) == 0:
                 sys.stderr.write("skipping/no values {0}\n".format(entry))
                 doContinue = True
                 break
-            entry["dimension"] = headers[v_i]
-            entry["stats"] = calculateStats(v)
-            report.append(entry.copy())
+            dimension = headers[v_i]
+            entry["stats"][dimension] = calculateStats(v)
         if doContinue:
             continue
         for pp in postProcess:
             if pp["task"] == entry["task"]:
                 vByCols = colsByRowsToRowsByCols(values)
                 pp_v = [pp["fn"](d, len(vByCols), entry) for d in vByCols]
-                entry["dimension"] = pp["header"]
-                entry["stats"] = calculateStats(pp_v)
-                report.append(entry.copy())
+                dimension = pp["header"]
+                entry["stats"][dimension] = calculateStats(pp_v)
+        report.append(entry)
 
         if (i % 100) == 0:
             with open('report/result.json', 'w') as f:
